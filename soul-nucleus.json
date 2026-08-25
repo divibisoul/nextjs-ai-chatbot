@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "nodeId": "ai-interaction-processor-01",
+  "role": "processor",
+  "capabilities": [
+    "conversation",
+    "ai-routing",
+    "streaming",
+    "context-assembly",
+    "artifact-interaction",
+    "persistence"
+  ],
+  "communication": {
+    "protocol": "soul-protocol",
+    "directionality": "bidirectional",
+    "preserveExistingTransports": true
+  },
+  "platformBoundary": {
+    "androidControl": false,
+    "hardwareControl": false,
+    "soulSentinelOwnership": false
+  },
+  "fusion": {
+    "canonicalImplementation": false,
+    "migrationStatus": "prepared",
+    "sourceRepository": "divibisoul/nextjs-ai-chatbot"
+  }
+}
