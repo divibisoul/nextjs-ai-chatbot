@@ -1,13 +1,23 @@
 import type { SoulMeshMessage, SoulMeshTransport, SoulNucleus } from './SoulMeshProtocol';
 
-export type SoulMeshPeerEndpoints = Record<SoulNucleus, string>;
+export type SoulMeshPeerEndpoints = Partial<Record<SoulNucleus, string>>;
 
 export class SoulMeshRouterTransport implements SoulMeshTransport {
   private readonly listeners = new Set<(message: SoulMeshMessage) => void | Promise<void>>();
 
-  constructor(private readonly endpoints: SoulMeshPeerEndpoints, private readonly headers: Record<string, string> = {}) {}
+  constructor(
+    private readonly local: SoulNucleus,
+    private readonly endpoints: SoulMeshPeerEndpoints,
+    private readonly headers: Record<string, string> = {},
+  ) {}
 
   async send(message: SoulMeshMessage): Promise<void> {
+    if (message.source !== this.local) throw new Error(`Soul Mesh source mismatch: expected ${this.local}`);
+    if (message.target === this.local) {
+      await this.dispatch(message);
+      return;
+    }
+
     const endpoint = this.endpoints[message.target];
     if (!endpoint) throw new Error(`No Soul Mesh endpoint configured for ${message.target}`);
 
@@ -25,6 +35,11 @@ export class SoulMeshRouterTransport implements SoulMeshTransport {
   }
 
   async receive(message: SoulMeshMessage): Promise<void> {
+    if (message.target !== this.local) return;
+    await this.dispatch(message);
+  }
+
+  private async dispatch(message: SoulMeshMessage): Promise<void> {
     await Promise.allSettled([...this.listeners].map((listener) => listener(message)));
   }
 }
