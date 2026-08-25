@@ -15,13 +15,22 @@ export class SoulMeshNucleusBridge implements SoulTransport {
   async send(message: SoulMessage): Promise<void> {
     const target = this.ids.peers[message.target];
     if (!target) throw new Error(`No mesh peer mapping for ${message.target}`);
+    const kind: SoulMeshMessage['kind'] = message.type === 'request'
+      ? 'request'
+      : message.type === 'response'
+        ? 'response'
+        : message.type === 'ack'
+          ? 'ack'
+          : message.type === 'event'
+            ? 'event'
+            : 'error';
     const meshMessage: SoulMeshMessage = {
       protocol: 'soul-mesh/1',
       id: message.id,
-      correlationId: message.correlationId ?? message.id,
+      correlationId: message.correlationId,
       source: this.ids.local,
       target,
-      kind: message.type === 'request' ? 'request' : message.type === 'response' ? 'response' : message.type === 'event' ? 'event' : 'error',
+      kind,
       capability: message.name,
       payload: message.payload,
       timestamp: Date.parse(message.timestamp) || Date.now(),
@@ -49,7 +58,15 @@ export class SoulMeshNucleusBridge implements SoulTransport {
     const source = Object.entries(this.ids.peers).find(([, nucleus]) => nucleus === message.source)?.[0];
     if (!source) return;
 
-    const type: SoulMessage['type'] = message.kind === 'request' ? 'request' : message.kind === 'response' ? 'response' : message.kind === 'event' ? 'event' : 'error';
+    const type: SoulMessage['type'] = message.kind === 'request'
+      ? 'request'
+      : message.kind === 'response'
+        ? 'response'
+        : message.kind === 'ack'
+          ? 'ack'
+          : message.kind === 'event'
+            ? 'event'
+            : 'response';
     const soulMessage: SoulMessage = {
       id: message.id,
       source,
@@ -57,7 +74,7 @@ export class SoulMeshNucleusBridge implements SoulTransport {
       type,
       name: message.capability ?? message.kind,
       timestamp: new Date(message.timestamp).toISOString(),
-      correlationId: message.correlationId || null,
+      correlationId: message.correlationId,
       payload: message.payload,
     };
     await this.receive(soulMessage);
