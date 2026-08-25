@@ -22,6 +22,7 @@ export interface NucleusHealth {
   role: 'ai-interaction-reasoning';
   status: 'ready' | 'degraded' | 'offline';
   capabilities: readonly string[];
+  forbiddenPlatformControls: readonly string[];
   timestamp: string;
 }
 
@@ -32,6 +33,17 @@ export const NUCLEUS_01_CAPABILITIES = [
   'streaming',
   'tool-orchestration',
   'chat-persistence',
+  'context-assembly',
+  'protocol-messaging',
+  'health-reporting',
+] as const;
+
+export const NUCLEUS_01_FORBIDDEN_PLATFORM_CONTROLS = [
+  'wifi-control',
+  'bluetooth-control',
+  'display-control',
+  'process-kill',
+  'android-lifecycle-control',
 ] as const;
 
 export function createSoulMessage<TPayload>(input: Omit<SoulMessage<TPayload>, 'id' | 'timestamp'>): SoulMessage<TPayload> {
@@ -49,6 +61,7 @@ export function getNucleus01Health(): NucleusHealth {
     role: 'ai-interaction-reasoning',
     status: 'ready',
     capabilities: NUCLEUS_01_CAPABILITIES,
+    forbiddenPlatformControls: NUCLEUS_01_FORBIDDEN_PLATFORM_CONTROLS,
     timestamp: new Date().toISOString(),
   };
 }
