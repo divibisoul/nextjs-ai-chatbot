@@ -25,7 +25,8 @@ export interface SoulMeshTransport {
 }
 
 export function createSoulMeshMessage<T>(input: Omit<SoulMeshMessage<T>, 'protocol' | 'id' | 'timestamp'>): SoulMeshMessage<T> {
-  return { protocol: 'soul-mesh/1', id: crypto.randomUUID(), timestamp: Date.now(), ...input };
+  const channelId = input.channelId ?? `${input.source}.OUT.${input.target}`;
+  return { protocol: 'soul-mesh/1', id: crypto.randomUUID(), timestamp: Date.now(), ...input, channelId };
 }
 
 export function isSoulMeshMessage(value: unknown): value is SoulMeshMessage {
