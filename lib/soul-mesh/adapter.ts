@@ -9,3 +9,4 @@ export async function invokePeerAI(target:MeshPeer['id'],prompt:string,options:{
 export async function probePeer(peer:MeshPeer){const started=Date.now();try{const details=await sendToNucleus(peer.id,'mesh.describe',{from:NUCLEUS_ID});return{id:peer.id,configured:true,reachable:true,latencyMs:Date.now()-started,details};}catch(error){return{id:peer.id,configured:true,reachable:false,latencyMs:null,error:error instanceof Error?error.message:String(error)};}}
 export async function probeAllPeers(){return Promise.all(getConfiguredPeers().map(probePeer));}
 export async function dispatchLocal(message:SoulMeshMessage,handlers:Record<string,(payload:unknown)=>Promise<unknown>|unknown>){return handleMeshMessage(message,handlers);}
+export function assertCapabilityResult<T>(value:unknown, label:string):T{if(value===undefined||value===null)throw new Error(`MESH_EMPTY_RESULT:${label}`);return value as T;}
