@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
+import { handleMeshMessage } from '@/lib/soul-mesh/endpoint';
+import { NUCLEUS_04_MESH_HANDLERS } from '@/lib/soul-mesh/Nucleus04MeshHandlers';
 import type { SoulMeshMessage } from '@/lib/soul-mesh/SoulMeshProtocol';
 
+function authorized(request: Request): boolean {
+  const token = process.env.SOUL_MESH_TOKEN;
+  return !token || request.headers.get('authorization') === `Bearer ${token}`;
+}
+
 export async function POST(request: Request) {
-  const message = (await request.json().catch(() => null)) as SoulMeshMessage | null;
-  if (!message || message.protocol !== 'soul-mesh/1' || message.target !== 'chatbot') return NextResponse.json({ error: 'Invalid Soul Mesh message' }, { status: 400 });
-  if (message.kind !== 'request') return NextResponse.json({ accepted: true, correlationId: message.correlationId, source: 'chatbot', target: message.source });
-  return NextResponse.json({ protocol: 'soul-mesh/1', id: crypto.randomUUID(), correlationId: message.correlationId, source: 'chatbot', target: message.source, kind: 'response', capability: message.capability, payload: { nucleus: 'chatbot', capability: message.capability, processed: true, payload: message.payload }, timestamp: Date.now() } satisfies SoulMeshMessage);
+  if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const message = (await request.json()) as SoulMeshMessage;
+    return NextResponse.json(await handleMeshMessage(message, NUCLEUS_04_MESH_HANDLERS));
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown mesh error' }, { status: 400 });
+  }
 }
