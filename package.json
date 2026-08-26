@@ -16,7 +16,8 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
+    "test:mesh": "pnpm exec tsx --test lib/soul-mesh/Nucleus05Runtime.test.ts lib/soul-mesh/SoulMeshTransportMultiplexer.test.ts"
   },
   "dependencies": {
     "@ai-sdk/provider": "2.0.0-beta.1",
