@@ -6,9 +6,9 @@ export const SOUL_MESH_PROTOCOL = 'soul-mesh/1' as const;
 
 function validateChannelMetadata(message: SoulMeshMessage) {
   if (!message.channelId) return;
-  const expectedOut = `${message.source}.OUT.${message.target}`;
-  const expectedIn = `${message.target}.IN.${message.source}`;
-  if (message.channelId !== expectedOut && message.channelId !== expectedIn) throw new Error('INVALID_CHANNEL_ID');
+  const slotPattern = new RegExp(`^(?:${message.source}\\.OUT\\.[1-5]\\.${message.target}|${message.target}\\.IN\\.[1-5]\\.${message.source})$`);
+  const legacyPattern = new RegExp(`^(?:${message.source}\\.OUT\\.${message.target}|${message.target}\\.IN\\.${message.source})$`);
+  if (!slotPattern.test(message.channelId) && !legacyPattern.test(message.channelId)) throw new Error('INVALID_CHANNEL_ID');
 }
 
 export function validateMeshMessage(message: SoulMeshMessage) {
