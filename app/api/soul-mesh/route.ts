@@ -14,5 +14,5 @@ export async function POST(request: Request) {
   const message = (await request.json().catch(() => null)) as SoulMeshMessage | null;
   if (!message || !valid(message)) return NextResponse.json({ error: 'INVALID_SOUL_MESH_MESSAGE' }, { status: 400 });
   if (message.kind !== 'request') return NextResponse.json({ accepted: true, correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source });
-  return NextResponse.json({ protocol: 'soul-mesh/1', id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind: 'response', capability: message.capability, payload: { nucleus: NUCLEUS_ID, capability: message.capability, processed: true, payload: message.payload ?? null }, timestamp: Date.now() } satisfies SoulMeshMessage);
+  return NextResponse.json({ protocol: 'soul-mesh/1', id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind: 'response', capability: message.capability, payload: { nucleus: NUCLEUS_ID, accepted: true, execution: 'runtime-required', receivedAt: Date.now() }, timestamp: Date.now() } satisfies SoulMeshMessage);
 }
