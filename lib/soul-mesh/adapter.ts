@@ -1,0 +1,87 @@
+import crypto from 'node:crypto';
+import { NUCLEUS_ID, SOUL_MESH_PROTOCOL, type SoulMeshMessage, type SoulNucleus, handleMeshMessage } from './endpoint';
+
+export type MeshPeer = { id: SoulNucleus; url: string };
+
+const PEER_ENV: Record<Exclude<SoulNucleus, 'N05'>, string> = {
+  N01: 'SOUL_MESH_N01_URL',
+  N02: 'SOUL_MESH_N02_URL',
+  N03: 'SOUL_MESH_N03_URL',
+  N04: 'SOUL_MESH_N04_URL',
+  N06: 'SOUL_MESH_N06_URL',
+};
+
+export function getConfiguredPeers(): MeshPeer[] {
+  return (Object.entries(PEER_ENV) as [Exclude<SoulNucleus, 'N05'>, string][])
+    .map(([id, env]) => ({ id, url: process.env[env]?.trim().replace(/\/$/, '') ?? '' }))
+    .filter((peer) => Boolean(peer.url));
+}
+
+export function createRequest(target: SoulNucleus, capability: string, payload: unknown): SoulMeshMessage {
+  if (target === NUCLEUS_ID) throw new Error('INVALID_LOCAL_TARGET');
+  const id = crypto.randomUUID();
+  return {
+    protocol: SOUL_MESH_PROTOCOL,
+    id,
+    correlationId: id,
+    source: NUCLEUS_ID,
+    target,
+    kind: 'request',
+    capability,
+    payload,
+    timestamp: Date.now(),
+  };
+}
+
+export async function sendToNucleus(
+  target: Exclude<SoulNucleus, 'N05'>,
+  capability: string,
+  payload: unknown,
+  timeoutMs = 15000,
+): Promise<unknown> {
+  const peer = getConfiguredPeers().find((item) => item.id === target);
+  if (!peer) throw new Error(`MESH_PEER_NOT_CONFIGURED:${target}`);
+  const request = createRequest(target, capability, payload);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${peer.url}/api/soul-mesh`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        ...(process.env.SOUL_MESH_TOKEN ? { authorization: `Bearer ${process.env.SOUL_MESH_TOKEN}` } : {}),
+      },
+      body: JSON.stringify(request),
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(`MESH_HTTP_${response.status}`);
+    if (!body || body.protocol !== SOUL_MESH_PROTOCOL || body.correlationId !== request.correlationId) {
+      throw new Error('MESH_RESPONSE_INVALID');
+    }
+    if (body.kind === 'error') throw new Error(`MESH_REMOTE_ERROR:${body.payload?.code ?? 'UNKNOWN'}`);
+    return body.payload;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function probePeer(peer: MeshPeer, timeoutMs = 5000) {
+  const started = Date.now();
+  try {
+    await sendToNucleus(peer.id as Exclude<SoulNucleus, 'N05'>, 'mesh.ping', { from: NUCLEUS_ID }, timeoutMs);
+    return { id: peer.id, configured: true, reachable: true, latencyMs: Date.now() - started };
+  } catch (error) {
+    return { id: peer.id, configured: true, reachable: false, latencyMs: null, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export async function probeAllPeers() {
+  return Promise.all(getConfiguredPeers().map((peer) => probePeer(peer)));
+}
+
+export async function dispatchLocal(message: SoulMeshMessage, handlers: Record<string, (payload: unknown) => Promise<unknown> | unknown>) {
+  return handleMeshMessage(message, handlers);
+}
