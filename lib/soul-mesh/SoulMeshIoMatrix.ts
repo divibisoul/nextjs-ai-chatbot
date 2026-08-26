@@ -1,6 +1,11 @@
-export const SOUL_MESH_PEERS = ['aeternum','nexus','eternium','chatbots','chatbot-2000'] as const;
-export type SoulMeshPeer = typeof SOUL_MESH_PEERS[number];
-export type SoulMeshRoute = { source: 'chatbot'; target: SoulMeshPeer; direction: 'out' } | { source: SoulMeshPeer; target: 'chatbot'; direction: 'in' };
-export const R4_IN: SoulMeshRoute[] = SOUL_MESH_PEERS.map((source) => ({ source, target: 'chatbot' as const, direction: 'in' as const }));
-export const R4_OUT: SoulMeshRoute[] = SOUL_MESH_PEERS.map((target) => ({ source: 'chatbot' as const, target, direction: 'out' as const }));
-export const R4_IO = [...R4_IN, ...R4_OUT];
+import { SOUL_MESH_PEERS, type SoulNucleusId } from './SoulMeshTopology';
+
+export const NUCLEUS_ID: SoulNucleusId = 'N04';
+export type SoulMeshRoute =
+  | { source: SoulNucleusId; target: SoulNucleusId; direction: 'out' }
+  | { source: SoulNucleusId; target: SoulNucleusId; direction: 'in' };
+
+const peers = SOUL_MESH_PEERS[NUCLEUS_ID];
+export const R5_IN: SoulMeshRoute[] = peers.map((source) => ({ source, target: NUCLEUS_ID, direction: 'in' }));
+export const R5_OUT: SoulMeshRoute[] = peers.map((target) => ({ source: NUCLEUS_ID, target, direction: 'out' }));
+export const R5_IO = [...R5_IN, ...R5_OUT] as const;
