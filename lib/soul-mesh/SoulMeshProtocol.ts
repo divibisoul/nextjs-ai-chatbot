@@ -1,4 +1,6 @@
-export type SoulNucleus = 'aeternum' | 'nexus' | 'eternium' | 'chatbot' | 'chatbots' | 'chatbot-2000';
+import type { SoulNucleusId } from './SoulMeshTopology';
+
+export type SoulNucleus = SoulNucleusId;
 export interface SoulMeshMessage<T = unknown> { protocol: 'soul-mesh/1'; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request' | 'response' | 'event' | 'error'; capability?: string; payload: T; timestamp: number; }
 export interface SoulMeshTransport { send(message: SoulMeshMessage): Promise<void>; onMessage(handler: (message: SoulMeshMessage) => void | Promise<void>): () => void; }
 export function createSoulMeshMessage<T>(input: Omit<SoulMeshMessage<T>, 'protocol' | 'id' | 'timestamp'>): SoulMeshMessage<T> { return { protocol: 'soul-mesh/1', id: crypto.randomUUID(), timestamp: Date.now(), ...input }; }
