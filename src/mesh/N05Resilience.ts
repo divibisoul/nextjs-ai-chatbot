@@ -1,0 +1,3 @@
+export class N05CircuitBreaker { private failures=0; private openedUntil=0; constructor(private readonly threshold=5,private readonly cooldownMs=60000){} canRequest(){return Date.now()>=this.openedUntil} success(){this.failures=0;this.openedUntil=0} failure(){this.failures++;if(this.failures>=this.threshold)this.openedUntil=Date.now()+this.cooldownMs} }
+export async function withN05Timeout<T>(task:()=>Promise<T>,ms=30000):Promise<T>{return await Promise.race([task(),new Promise<T>((_,reject)=>setTimeout(()=>reject(new Error('SOUL_MESH_TIMEOUT')),ms))])}
+export function backoffDelay(attempt:number,base=250,max=8000){return Math.min(max,base*2**attempt)+Math.floor(Math.random()*100)}
