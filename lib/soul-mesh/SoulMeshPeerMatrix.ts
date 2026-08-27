@@ -1,4 +1,4 @@
-export const SOUL_MESH_PEERS = ['N01','N02','N03','N04','N06'] as const;
+export const SOUL_MESH_PEERS = ['N01','N02','N03','N04','N05','N06'] as const;
 export type SoulMeshPeer = typeof SOUL_MESH_PEERS[number];
 export type SoulMeshDirection = 'in' | 'out';
 export type SoulMeshPeerRoute = { peer: SoulMeshPeer; direction: SoulMeshDirection; enabled: boolean };
