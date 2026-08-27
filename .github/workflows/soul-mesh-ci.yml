@@ -16,5 +16,11 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Typecheck Mesh adapter
-        run: pnpm exec tsc -p tsconfig.mesh.json --noEmit
+      - name: Full Typecheck
+        run: pnpm run typecheck
+      - name: Mesh Typecheck
+        run: pnpm run typecheck:mesh
+      - name: Mesh unit tests
+        run: pnpm run test:mesh
+      - name: Production build
+        run: pnpm run build
