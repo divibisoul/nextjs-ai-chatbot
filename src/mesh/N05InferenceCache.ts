@@ -1,0 +1,4 @@
+import { createHash } from 'node:crypto';
+
+type Entry={expires:number;model:string;value:unknown};
+export class N05InferenceCache { private readonly store=new Map<string,Entry>(); constructor(private readonly ttlMs=Number(process.env.N05_INFERENCE_CACHE_TTL_MS??300000)){} key(input:{prompt:string;system?:string;temperature?:number;model:string}){return createHash('sha256').update(JSON.stringify(input)).digest('hex')} get(input:{prompt:string;system?:string;temperature?:number;model:string}){const k=this.key(input),e=this.store.get(k);if(!e||e.expires<Date.now()){this.store.delete(k);return undefined}return e.value} set(input:{prompt:string;system?:string;temperature?:number;model:string},value:unknown){this.store.set(this.key(input),{expires:Date.now()+this.ttlMs,model:input.model,value})} invalidateModel(model:string){for(const [k,e] of this.store)if(e.model!==model)this.store.delete(k)} clear(){this.store.clear()} }
