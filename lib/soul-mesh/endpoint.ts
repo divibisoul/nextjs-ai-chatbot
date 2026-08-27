@@ -5,7 +5,8 @@ import { createNucleus05Runtime, type N05CapabilityHandler } from './Nucleus05Ru
 export const NUCLEUS_ID = 'N05' as const;
 export const SOUL_MESH_PROTOCOL = 'soul-mesh/1' as const;
 export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06';
-export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string } };
+export type NucleusId = SoulNucleus;
+export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string } };
 const nuclei = new Set<SoulNucleus>(['N01','N02','N03','N04','N05','N06']);
 
 export function validateMeshMessage(m: SoulMeshMessage) {
@@ -16,20 +17,17 @@ export function validateMeshMessage(m: SoulMeshMessage) {
   if (!['request','response','event','error'].includes(m.kind)) throw new Error('INVALID_MESSAGE_KIND');
   if (!m.capability && m.kind !== 'event') throw new Error('MISSING_CAPABILITY');
   if (!Number.isFinite(m.timestamp)) throw new Error('INVALID_TIMESTAMP');
-  if (Date.now() - m.timestamp > 5 * 60 * 1000) throw new Error('STALE_MESSAGE');
+  if (Math.abs(Date.now() - m.timestamp) > 5 * 60 * 1000) throw new Error('STALE_MESSAGE');
   return true;
 }
 
 function result(message: SoulMeshMessage, payload: unknown, kind: SoulMeshMessage['kind'] = 'response'): SoulMeshMessage {
-  return { protocol: SOUL_MESH_PROTOCOL, id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind, capability: message.capability, payload, timestamp: Date.now(), meta: { runtime: 'nextjs-ai-chatbot', transport: 'http-json', encoding: 'json', version: SOUL_MESH_PROTOCOL } };
+  return { protocol: SOUL_MESH_PROTOCOL, id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind, capability: message.capability, payload, timestamp: Date.now(), meta: { runtime: 'nextjs-ai-chatbot', transport: 'http-json', encoding: 'json', version: SOUL_MESH_PROTOCOL, nonce: crypto.randomUUID() } };
 }
 
 export function createNucleus05MeshHandlers(extra: Record<string, N05CapabilityHandler> = {}) {
   const runtime = createNucleus05Runtime(extra);
-  return {
-    runtime,
-    handlers: Object.fromEntries(runtime.list().map((capability) => [capability, (payload: unknown) => runtime.execute(capability, payload)])),
-  };
+  return { runtime, handlers: Object.fromEntries(runtime.list().map((capability) => [capability, (payload: unknown) => runtime.execute(capability, payload)])) };
 }
 
 export async function handleMeshMessage(message: SoulMeshMessage, handlers: Record<string, (payload: unknown) => Promise<unknown> | unknown> = {}) {
@@ -38,13 +36,7 @@ export async function handleMeshMessage(message: SoulMeshMessage, handlers: Reco
   if (message.capability === 'mesh.ping') return result(message, { ok: true, nucleus: NUCLEUS_ID, echoed: message.payload, processedAt: Date.now() });
   if (message.capability === 'mesh.describe') return result(message, { nucleus: NUCLEUS_ID, protocol: SOUL_MESH_PROTOCOL, status: 'online', capabilities: SOUL_MESH_CAPABILITIES, executableCapabilities: createNucleus05Runtime(handlers).list(), models: soulInferenceCapabilities(), runtime: 'nextjs-ai-chatbot' });
   if (message.capability === 'core.health') return result(message, { ok: true, nucleus: NUCLEUS_ID, runtime: 'nextjs-ai-chatbot', aiProviderConfigured: Boolean(process.env.XAI_API_KEY), timestamp: Date.now() });
-
   const runtime = createNucleus05Runtime(handlers);
-  try {
-    return result(message, await runtime.execute(message.capability ?? '', message.payload));
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : 'Unknown error';
-    const code = detail.startsWith('CAPABILITY_HANDLER_NOT_REGISTERED') ? 'CAPABILITY_HANDLER_NOT_REGISTERED' : 'CAPABILITY_EXECUTION_ERROR';
-    return result(message, { code, nucleus: NUCLEUS_ID, capability: message.capability, detail }, 'error');
-  }
+  try { return result(message, await runtime.execute(message.capability ?? '', message.payload)); }
+  catch (error) { const detail = error instanceof Error ? error.message : 'Unknown error'; const code = detail.startsWith('CAPABILITY_HANDLER_NOT_REGISTERED') ? 'CAPABILITY_HANDLER_NOT_REGISTERED' : 'CAPABILITY_EXECUTION_ERROR'; return result(message, { code, nucleus: NUCLEUS_ID, capability: message.capability, detail }, 'error'); }
 }
