@@ -1,6 +1,5 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { canConsume, ownershipFor, type N05Nucleus } from './N05OwnershipMatrix';
-import { sendToNucleus } from '../../lib/soul-mesh/adapter';
 
 type Handler = (request: MeshRequest) => Promise<unknown> | unknown;
 export type MeshRequest = { id?: string; correlationId?: string; source: N05Nucleus; target: 'N05'; capability: string; payload: unknown; timestamp?: number; nonce?: string };
@@ -19,6 +18,8 @@ export class N05MeshGateway {
     const rule = ownershipFor(request.capability);
     if (!rule || !canConsume(request.source, request.capability)) return { id, correlationId, source: 'N05', target: request.source, capability: request.capability, status: 'error', error: { code: 'CAPABILITY_FORBIDDEN', message: 'Source is not an authorized consumer' } };
     if (rule.owner !== 'N05') {
+      // Lazy import prevents a module cycle: endpoint -> gateway -> adapter -> endpoint.
+      const { sendToNucleus } = await import('../../lib/soul-mesh/adapter');
       const candidates = [rule.owner, ...(rule.fallback ?? [])].filter((value, index, all) => all.indexOf(value) === index && value !== 'N05');
       let lastError: unknown;
       for (const target of candidates) {
