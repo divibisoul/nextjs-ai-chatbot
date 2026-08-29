@@ -6,6 +6,15 @@ type Handler = (request: MeshRequest) => Promise<unknown> | unknown;
 export type MeshRequest = { id?: string; correlationId?: string; source: N05Nucleus; target: 'N05'; capability: string; payload: unknown; timestamp?: number; nonce?: string };
 export type MeshResponse = { id: string; correlationId: string; source: 'N05'; target: N05Nucleus; capability: string; status: 'ok' | 'error'; result?: unknown; error?: { code: string; message: string } };
 
+function ownershipCapability(capability: string): string {
+  if (capability === 'ai.infer') return 'inference.';
+  if (capability === 'conversation') return 'conversation.';
+  if (capability === 'document-processing') return 'document.';
+  if (capability === 'artifact-processing') return 'document.';
+  if (capability === 'tool-execution') return 'tool.';
+  return capability;
+}
+
 export class N05MeshGateway {
   private readonly handlers = new Map<string, Handler>();
   register(capability: string, handler: Handler, ownership: { owner: N05Nucleus; consumers: N05Nucleus[] }) {
@@ -16,8 +25,9 @@ export class N05MeshGateway {
   async execute(request: MeshRequest): Promise<MeshResponse> {
     const id = request.id ?? randomUUID();
     const correlationId = request.correlationId ?? randomUUID();
-    const rule = ownershipFor(request.capability);
-    if (!rule || !canConsume(request.source, request.capability)) return { id, correlationId, source: 'N05', target: request.source, capability: request.capability, status: 'error', error: { code: 'CAPABILITY_FORBIDDEN', message: 'Source is not an authorized consumer' } };
+    const ownershipKey = ownershipCapability(request.capability);
+    const rule = ownershipFor(ownershipKey);
+    if (!rule || !canConsume(request.source, ownershipKey)) return { id, correlationId, source: 'N05', target: request.source, capability: request.capability, status: 'error', error: { code: 'CAPABILITY_FORBIDDEN', message: 'Source is not an authorized consumer' } };
     if (rule.owner !== 'N05') {
       const { sendToNucleus } = await import('../../lib/soul-mesh/adapter');
       const candidates = [rule.owner, ...(rule.fallback ?? [])].filter((value, index, all) => all.indexOf(value) === index && value !== 'N05');
