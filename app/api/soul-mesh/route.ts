@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import crypto, { createHmac, timingSafeEqual } from 'node:crypto';
 import { NUCLEUS_ID, SOUL_MESH_PROTOCOL, type SoulMeshMessage, validateMeshMessage } from '@/lib/soul-mesh/endpoint';
 import { SOUL_MESH_CAPABILITIES } from '@/lib/soul-mesh/SoulMeshCapabilities';
 import { probeAllPeers } from '@/lib/soul-mesh/adapter';
@@ -7,8 +7,11 @@ import { soulInferenceCapabilities } from '@/lib/soul-mesh/SoulMeshAI';
 import { createN05CapabilityGateway } from '@/src/mesh/N05Capabilities';
 import { registerN05 } from '@/lib/soul-mesh/N05Registration';
 
-export const runtime='nodejs'; export const dynamic='force-dynamic';
-const gateway=createN05CapabilityGateway(); const peerBuckets=new Map<string,number[]>(); const nonces=new Map<string,number>();
+export const runtime='nodejs';
+export const dynamic='force-dynamic';
+const gateway=createN05CapabilityGateway();
+const peerBuckets=new Map<string,number[]>();
+const nonces=new Map<string,number>();
 const RATE_LIMIT=100, WINDOW_MS=60000;
 void registerN05().catch(()=>undefined);
 function authorized(request:Request){const token=process.env.SOUL_MESH_TOKEN;if(!token)return process.env.NODE_ENV!=='production';return request.headers.get('authorization')===`Bearer ${token}`}
