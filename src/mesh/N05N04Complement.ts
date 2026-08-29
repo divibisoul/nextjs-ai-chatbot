@@ -3,10 +3,10 @@ import { withN05Retry, n05CircuitBreaker } from './N05Resilience';
 import { sendToNucleus } from '../../lib/soul-mesh/adapter';
 
 /** N05+N04 cooperative pair: N05 supplies inference/conversation; N04 supplies document/tool/artifact execution. */
-export async function delegateN05WorkToN04(capability:string,payload:unknown,correlationId=randomUUID()):Promise<unknown>{
+export async function delegateN05WorkToN04(capability:string,payload:unknown):Promise<unknown>{
   if(!/^(document|tool|artifact)\./.test(capability)) throw new Error(`N05_N04_CAPABILITY_NOT_COMPLEMENTARY:${capability}`);
   return withN05Retry(
-    () => sendToNucleus('N04',capability,payload,30000,correlationId),
+    () => sendToNucleus('N04',capability,payload,30000),
     'N04',
     {retries:2,breaker:n05CircuitBreaker}
   );
