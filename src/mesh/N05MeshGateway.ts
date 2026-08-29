@@ -10,7 +10,7 @@ export class N05MeshGateway {
   private readonly handlers = new Map<string, Handler>();
   register(capability: string, handler: Handler, ownership: { owner: N05Nucleus; consumers: N05Nucleus[] }) {
     if (!capability || typeof handler !== 'function') throw new TypeError('Invalid capability handler');
-    if (ownership.owner !== 'N05' || !ownership.consumers.includes('N01')) throw new Error('Invalid N05 ownership declaration');
+    if (ownership.owner !== 'N05') throw new Error('Invalid N05 ownership declaration');
     this.handlers.set(capability, handler);
   }
   async execute(request: MeshRequest): Promise<MeshResponse> {
