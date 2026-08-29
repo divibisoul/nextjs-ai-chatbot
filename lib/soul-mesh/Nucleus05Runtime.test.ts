@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Nucleus05Runtime } from './Nucleus05Runtime';
+import { N05_CHANNEL_COUNT, N05_IN_CHANNELS, N05_OUT_CHANNELS, N05_PEERS } from './N05ChannelMatrix';
 
 test('N05 registers and executes independent capabilities', async () => {
   const runtime = new Nucleus05Runtime().register('test.tool', async (payload) => ({ ok: true, payload }));
@@ -11,4 +12,13 @@ test('N05 registers and executes independent capabilities', async () => {
 test('N05 refuses undeclared executable capabilities', async () => {
   const runtime = new Nucleus05Runtime();
   await assert.rejects(() => runtime.execute('missing.capability', null), /CAPABILITY_HANDLER_NOT_REGISTERED/);
+});
+
+test('N05 exposes exactly five bidirectional peer channels', () => {
+  assert.equal(N05_PEERS.length, 5);
+  assert.equal(N05_IN_CHANNELS.length, 5);
+  assert.equal(N05_OUT_CHANNELS.length, 5);
+  assert.equal(N05_CHANNEL_COUNT, 10);
+  assert.deepEqual(N05_IN_CHANNELS, ['N05.IN.N01','N05.IN.N02','N05.IN.N03','N05.IN.N04','N05.IN.N06']);
+  assert.deepEqual(N05_OUT_CHANNELS, ['N05.OUT.N01','N05.OUT.N02','N05.OUT.N03','N05.OUT.N04','N05.OUT.N06']);
 });
