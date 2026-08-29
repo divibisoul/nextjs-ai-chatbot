@@ -5,6 +5,7 @@ import { n05InferencePool } from './N05InferencePool';
 import { N05AgentRegistry } from './N05AgentRegistry';
 import type { N05Agent } from './N05AgentContract';
 import type { SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
+import { sendToNucleus } from '@/lib/soul-mesh/adapter';
 
 const systems: Record<string, string> = {
   'inference.reason': 'You are N05, the Soul inference engine. Reason precisely and return only the requested reasoning.',
@@ -47,5 +48,19 @@ export function createN05CapabilityGateway() {
     const ownership = capability.startsWith('conversation.') ? N05_OWNERSHIP['conversation.'] : N05_OWNERSHIP['inference.'];
     gateway.register(capability, (request) => agents.execute(request), ownership);
   }
+
+  // N06 is the authoritative cognitive/pilot nucleus. N05 remains the
+  // inference specialist and can request N06 orchestration through the same
+  // Soul Mesh, creating a complementary N05 <-> N06 cognitive loop without
+  // introducing a parallel bus.
+  const collaborationAgent: N05Agent = {
+    id: 'N05-n06-collaboration-agent',
+    name: 'N05 N06 Collaboration Agent',
+    capabilities: ['support.ai-pilot'],
+    execute: async (request) => sendToNucleus('N06', 'support.ai-pilot', request.payload),
+  };
+  agents.register(collaborationAgent);
+  gateway.register('support.ai-pilot', (request) => agents.execute(request), N05_OWNERSHIP['support.']);
+
   return gateway;
 }
