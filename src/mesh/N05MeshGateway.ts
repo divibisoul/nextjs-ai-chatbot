@@ -1,5 +1,6 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { canConsume, ownershipFor, type N05Nucleus } from './N05OwnershipMatrix';
+import { n05CircuitBreaker, withN05Retry } from './N05Resilience';
 
 type Handler = (request: MeshRequest) => Promise<unknown> | unknown;
 export type MeshRequest = { id?: string; correlationId?: string; source: N05Nucleus; target: 'N05'; capability: string; payload: unknown; timestamp?: number; nonce?: string };
@@ -18,13 +19,12 @@ export class N05MeshGateway {
     const rule = ownershipFor(request.capability);
     if (!rule || !canConsume(request.source, request.capability)) return { id, correlationId, source: 'N05', target: request.source, capability: request.capability, status: 'error', error: { code: 'CAPABILITY_FORBIDDEN', message: 'Source is not an authorized consumer' } };
     if (rule.owner !== 'N05') {
-      // Lazy import prevents a module cycle: endpoint -> gateway -> adapter -> endpoint.
       const { sendToNucleus } = await import('../../lib/soul-mesh/adapter');
       const candidates = [rule.owner, ...(rule.fallback ?? [])].filter((value, index, all) => all.indexOf(value) === index && value !== 'N05');
       let lastError: unknown;
       for (const target of candidates) {
         try {
-          const result = await sendToNucleus(target as Exclude<N05Nucleus, 'N05'>, request.capability, request.payload, 30000);
+          const result = await withN05Retry(() => sendToNucleus(target as Exclude<N05Nucleus, 'N05'>, request.capability, request.payload, 30000), target, { retries: 2, breaker: n05CircuitBreaker });
           return { id, correlationId, source: 'N05', target: request.source, capability: request.capability, status: 'ok', result };
         } catch (error) { lastError = error; }
       }
