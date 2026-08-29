@@ -1,30 +1,30 @@
 version: 1.0.0
 authority:
   - capability: "inference.*"
-    owner: "N05"
-    fallback: "N02"
-    consumers: ["N01", "N02", "N04", "N06"]
+    owner: "N2"
+    fallback: "N5"
+    consumers: ["N1", "N4", "N6"]
   - capability: "conversation.*"
-    owner: "N05"
-    fallback: "N02"
-    consumers: ["N01", "N06"]
+    owner: "N2"
+    fallback: "N5"
+    consumers: ["N1", "N6"]
   - capability: "audio.*"
-    owner: "N03"
-    fallback: "N01"
-    consumers: ["N01", "N02", "N05", "N06"]
+    owner: "N3"
+    fallback: "N1"
+    consumers: ["N1", "N2"]
   - capability: "document.*"
-    owner: "N04"
-    fallback: "N06"
-    consumers: ["N01", "N05", "N06"]
+    owner: "N4"
+    fallback: "N6"
+    consumers: ["N1", "N5", "N6"]
   - capability: "tool.*"
-    owner: "N06"
-    fallback: "N04"
-    consumers: ["N01", "N02", "N04", "N05"]
+    owner: "N4"
+    fallback: "N6"
+    consumers: ["N1", "N5", "N6"]
   - capability: "artifact.*"
-    owner: "N04"
-    fallback: "N06"
-    consumers: ["N01", "N05", "N06"]
+    owner: "N4"
+    fallback: "N6"
+    consumers: ["N1"]
   - capability: "pilot.*"
-    owner: "N06"
-    fallback: "N01"
-    consumers: ["N01", "N02", "N04"]
+    owner: "N6"
+    fallback: "N1"
+    consumers: ["N1", "N2"]
