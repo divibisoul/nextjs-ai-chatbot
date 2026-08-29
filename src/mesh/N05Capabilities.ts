@@ -1,7 +1,8 @@
 import { N05MeshGateway } from './N05MeshGateway';
 import { N05_OWNERSHIP } from './N05OwnershipMatrix';
 import { N05InferenceCache } from './N05InferenceCache';
-import { executeSoulInference, type SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
+import { n05InferencePool } from './N05InferencePool';
+import type { SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
 
 const systems: Record<string, string> = {
   'inference.reason': 'You are N05, the Soul inference engine. Reason precisely and return only the requested reasoning.',
@@ -26,11 +27,10 @@ export function createN05CapabilityGateway() {
     const family = capability.startsWith('conversation.') ? 'conversation.' : 'inference.';
     gateway.register(capability, async (request) => {
       const input = payloadToRequest(request.payload, systems[capability]);
-      // Conversation is intentionally never cached: its semantics depend on context/history.
-      if (family === 'conversation.') return executeSoulInference(input);
+      if (family === 'conversation.') return n05InferencePool.run(input, request.source === 'N01' ? 100 : 50);
       const cached = cache.get(input);
       if (cached !== undefined) return cached;
-      const result = await executeSoulInference(input);
+      const result = await n05InferencePool.run(input, request.source === 'N01' ? 100 : 50);
       cache.set(input, result);
       return result;
     }, N05_OWNERSHIP[family]);
