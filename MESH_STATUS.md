@@ -3,14 +3,15 @@
 ## Role
 N05 is the Soul **INFERENCE ENGINE**. Its authoritative capability families are `inference.*` and `conversation.*`.
 
-## Cross-nucleus reconciliation — 2026-08-28
-This map was re-audited against the current implementations of N01–N06 before optimizing N05.
+## Cross-nucleus direction
+N01–N06 are six **independent IAs**. Soul Mesh is the cooperative layer through which they discover, request, execute, respond and delegate work. This does not create a parallel API and does not replace any existing runtime, provider or transport.
 
-- **N01**: latest work hardens envelope freshness/replay protection, capability authorization, transport/envelope contracts and self-tests. N05 therefore preserves `timestamp`/`nonce` metadata and must treat N01 as the control-plane peer.
-- **N02**: current Mesh work includes HTTP, browser bridge, realtime WebSocket, hybrid transport fallback and correlation context. N05 keeps HTTP JSON compatibility and now delegates through the canonical peer client rather than assuming one transport.
-- **N03**: current endpoint exposes executable `audio.transcribe`, `audio.analyze.emotion` and `speech.synthesize` through a Mesh router. N05 therefore recognizes both `audio.*` and `speech.*` as N03-owned families.
-- **N04**: current endpoint is a Next.js Mesh runtime with verified transport/discovery work. N04 remains the N05 delegation target for `document.*`.
-- **N06**: current ownership contract declares `cognitive.*` and `tool.*` owned by N06 with N04 as a tool fallback. N05 was previously stale on this point; its ownership matrix is now reconciled.
+## Reconciliation with current peers — 2026-08-28
+- **N01**: hardened envelope freshness/replay protection, capability authorization, transport/envelope contracts and self-tests. N05 preserves timestamp/nonce metadata.
+- **N02**: Mesh work includes HTTP, browser bridge, realtime WebSocket, hybrid transport fallback and correlation context. N05 delegates through the canonical peer adapter.
+- **N03**: executable `audio.transcribe`, `audio.analyze.emotion` and `speech.synthesize`; N03 owns `audio.*` and `speech.*`.
+- **N04**: Next.js Mesh runtime; N04 owns `document.*`.
+- **N06**: current ownership contract declares `cognitive.*` and `tool.*`; N04 is the `tool.*` fallback.
 
 ## Capability ownership
 - inference.* → **N05**; fallback N02
@@ -21,34 +22,50 @@ This map was re-audited against the current implementations of N01–N06 before 
 - cognitive.* → **N06**; fallback N05 → N02
 - tool.* → **N06**; fallback N04
 
-N05 is a consumer of the non-owned families. It must delegate them rather than returning a false local capability result.
+## N05 implementation completed so far
+- Gateway boundary created and wired to the real peer adapter.
+- Ownership/consumer/fallback matrix reconciled against current peer implementations.
+- Non-owned capabilities delegate to their owner/fallback instead of being falsely treated as local.
+- Local inference/conversation registration retained.
+- Inference cache integrated without caching stateful conversation operations.
+- Existing adaptive transport infrastructure retained rather than duplicated.
+- Correlation/security metadata preserved.
+- Architecture directive committed to repository documentation.
 
-## Capability map
-- inference.reason → N05
-- inference.analyze → N05
-- inference.summarize → N05
-- inference.translate → N05
-- inference.classify → N05
-- conversation.chat → N05
-- conversation.memory → N05
+## Completion dashboard — N05
+Percentages are **engineering completion estimates based on verified code evidence**, not claims of live E2E success.
 
-## Implemented infrastructure
-- `src/mesh/N05MeshGateway.ts` — single Mesh/runtime boundary; delegates non-owned capabilities to the current owner/fallback chain.
-- `src/mesh/N05OwnershipMatrix.ts` — reconciled owner/consumer/fallback policy.
-- `src/mesh/N05Capabilities.ts` — specialized inference/conversation registration.
-- `src/mesh/N05InferenceCache.ts` — model-aware TTL cache.
-- `src/mesh/N05Resilience.ts` — timeout, circuit breaker and exponential backoff primitives.
-- `src/mesh/N05Tracing.ts` — distributed trace metadata.
-- `scripts/test-n6-n5-n6.mjs` — N06 → N05 → N06 proof harness.
+```text
+Architecture / role          ████████████████████ 100%
+Ownership / delegation       ████████████████████ 100%
+Mesh gateway                 ██████████████████░░  90%
+Runtime capability wiring    █████████████████░░░  85%
+Transport integration        ████████████████░░░░  80%
+Resilience                   ███████████████░░░░░  75%
+Cache / inference path       █████████████████░░░  85%
+Security / replay contract   ██████████████░░░░░░  70%
+Discovery / registration     ████████░░░░░░░░░░░░  40%
+E2E IA↔IA proof              ████░░░░░░░░░░░░░░░░  20%
+CI verified                  ███░░░░░░░░░░░░░░░░░  15%
+───────────────────────────────────────────────
+OVERALL N05                  ███████████████░░░░░  ~72%
+```
 
-## Validation status
-Structural changes are applied, but N05 is **not considered E2E verified** until the real runtime and peer endpoints pass CI and live cross-nucleus tests.
+## What remains before N05 can be called finished
+1. Verify the real Mesh envelope against N01/N02 contracts.
+2. Close N05 registration/discovery using the **actual** N01 discovery mechanism; do not invent `/register` if N01 does not expose it.
+3. Prove N05 can receive a request from another IA, execute a real capability and return a correlated response.
+4. Prove N05 can delegate to N03/N04/N06 and return the remote result.
+5. Prove the N06 → N05 → N06 inference circuit.
+6. Run typecheck/build and fix every resulting error.
+7. Run resilience, ownership and delegation tests.
+8. Record actual CI/E2E evidence here.
 
-Required gates:
-- `npm run typecheck`
-- `npm run build`
-- capability execution tests
-- N06 → N05 → N06 E2E
-- N01 registration/heartbeat
-- rate limit, timeout and circuit-breaker tests
-- owner/fallback delegation tests
+## Important validation rule
+A `200`, `ping`, file presence or static contract is **not** counted as IA↔IA communication. Completion requires a real request → capability execution → response path with identity, source, target and correlation preserved.
+
+## External engineering research
+Current OpenTelemetry JavaScript guidance supports stable traces/metrics for Node.js and recommends SDK initialization before application code; this is the reference direction for the N05 observability layer rather than inventing a proprietary tracing system. See https://opentelemetry.io/docs/languages/js/.
+
+## Current CI evidence
+The repository contains `soul-mesh-ci.yml`, but the latest inspected commit has no associated workflow run available through the GitHub connector. Therefore CI is **not** marked green until an actual run is observed.
