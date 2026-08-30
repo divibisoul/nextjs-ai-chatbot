@@ -1,41 +1,46 @@
 import { executeSoulInference } from './SoulMeshAI';
+import { N05MeshGateway, type N05CapabilityHandler, type N05GatewayRequest, type N05GatewayResponse } from './N05MeshGateway';
 
-export type N05CapabilityHandler = (payload: unknown) => unknown | Promise<unknown>;
+export type { N05CapabilityHandler };
 
-/**
- * Capability registry for N05. Existing application functions can be registered
- * without being rewritten or frozen. The Mesh only becomes an additional API.
- */
+/** N05 runtime with a single executable boundary for Soul Mesh calls. */
 export class Nucleus05Runtime {
-  private readonly handlers = new Map<string, N05CapabilityHandler>();
+  private readonly gateway: N05MeshGateway;
+
+  constructor(gateway = new N05MeshGateway()) {
+    this.gateway = gateway;
+  }
 
   register(capability: string, handler: N05CapabilityHandler): this {
-    if (!capability.trim()) throw new Error('N05_CAPABILITY_ID_REQUIRED');
-    this.handlers.set(capability, handler);
+    this.gateway.register(capability, handler);
     return this;
   }
 
   registerMany(handlers: Record<string, N05CapabilityHandler>): this {
-    for (const [capability, handler] of Object.entries(handlers)) this.register(capability, handler);
+    this.gateway.registerMany(handlers);
     return this;
   }
 
-  has(capability: string): boolean {
-    return this.handlers.has(capability);
-  }
-
-  list(): string[] {
-    return [...this.handlers.keys()].sort();
-  }
+  has(capability: string): boolean { return this.gateway.has(capability); }
+  list(): string[] { return this.gateway.list(); }
 
   async execute(capability: string, payload: unknown): Promise<unknown> {
-    const handler = this.handlers.get(capability);
-    if (!handler) throw new Error(`CAPABILITY_HANDLER_NOT_REGISTERED:${capability}`);
-    return handler(payload);
+    const response = await this.gateway.execute({
+      capability,
+      payload,
+      source: 'N01',
+      correlationId: crypto.randomUUID(),
+    });
+    if (!response.ok) throw new Error(`${response.error?.code ?? 'CAPABILITY_EXECUTION_FAILED'}:${response.error?.message ?? capability}`);
+    return response.result;
+  }
+
+  async executeMesh(request: N05GatewayRequest): Promise<N05GatewayResponse> {
+    return this.gateway.execute(request);
   }
 
   describe() {
-    return { nucleus: 'N05', executableCapabilities: this.list() };
+    return { nucleus: 'N05', executableCapabilities: this.list(), meshBoundary: 'N05MeshGateway' };
   }
 }
 
