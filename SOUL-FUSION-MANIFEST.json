@@ -1,0 +1,15 @@
+{
+  "system": "SOUL",
+  "fusionVersion": "1.0",
+  "nucleus": "N05",
+  "role": "orchestration-dispatch-execution",
+  "independentRuntime": true,
+  "capabilityOwnership": "native",
+  "peers": ["N01", "N02", "N03", "N04", "N06"],
+  "transports": ["IN_PROCESS", "WEBVIEW_BRIDGE", "LOOPBACK_HTTP", "HTTP", "REALTIME"],
+  "channels": {"in": 5, "out": 5},
+  "preserveNativeTools": true,
+  "delegation": true,
+  "discovery": true,
+  "fusionGateway": false
+}
