@@ -52,8 +52,8 @@ export class N05InferencePool {
     while(this.active<this.concurrency&&this.queue.length){
       const job=this.queue.shift()!;
       this.active++;
-      const execution=this.piscina
-        ? this.piscina.run(job.input)
+      const execution:Promise<N05InferenceResult>=this.piscina
+        ? this.piscina.run(job.input) as Promise<N05InferenceResult>
         : executeSoulInference(job.input);
       execution.then(job.resolve,job.reject).finally(()=>{this.active--;this.drain();});
     }
