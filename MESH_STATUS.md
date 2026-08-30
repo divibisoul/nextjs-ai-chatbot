@@ -4,7 +4,7 @@
 N05 is the Soul **INFERENCE ENGINE**. Its authoritative capability families are `inference.*` and `conversation.*`.
 
 ## Source of truth
-GitHub `main` plus this branch are the authoritative implementation state. Conversation claims are never treated as proof of implementation. This branch is a cumulative audit/correction pass over work already present in the repository; it does not reset prior work.
+GitHub `main` is the authoritative implementation state. Conversation claims are never treated as proof of implementation. The cumulative audit branch was merged as PR #7; no prior N05 work was reset.
 
 ## 2026-08-29 cumulative audit findings and immediate corrections
 - **Ownership contradiction found:** `src/mesh/N05OwnershipMatrix.ts` previously declared N02 as owner of `inference.*`/`conversation.*` while N05 documentation and the N05 role require N05 ownership. Corrected to N05 with N02 fallback.
@@ -65,6 +65,11 @@ CI/typecheck/build evidence       ████░░░░░░░░░░░�
 STRUCTURAL N05                   █████████████████░░░  ~86%
 ```
 
+## Validation evidence
+- PR #7 was merged into `main` at commit `75ee5bfe63412f8fa0185205274edc24f644234d`.
+- The PR dependency-review workflow ran and failed; rerunning the same job also failed. The connector did not expose the job log payload, so the exact dependency finding is not being guessed or marked resolved.
+- No live CI run for the merge commit is currently observable through the available GitHub workflow-run query.
+
 ## Remaining closure gates
 1. Run repository typecheck/build and correct every compiler failure.
 2. Execute the N05 gateway tests and Mesh route tests in CI.
@@ -72,7 +77,8 @@ STRUCTURAL N05                   ███████████████�
 4. Verify N05 ↔ N02/N03/N04/N06 real capability delegation.
 5. Prove N06 → N05 → N06 inference with correlation and identity preserved.
 6. Validate adaptive transport behavior with at least two available transports when peers expose them.
-7. Record actual CI/E2E evidence here; never convert static evidence into a live-success claim.
+7. Diagnose the dependency-review failure from GitHub Actions logs when those logs become accessible; do not suppress the check merely to obtain green status.
+8. Record actual CI/E2E evidence here; never convert static evidence into a live-success claim.
 
 ## Research basis
 Piscina's current guidance supports worker pools for appropriate workloads but notes that worker threads can add overhead for already-asynchronous I/O; N05 therefore keeps the existing async inference path as the safe default and makes Piscina an explicit production-worker mode rather than blindly moving provider I/O into workers. OpenTelemetry's JavaScript guidance recommends initializing the SDK before application code and using the API for manual tracing; N05 preserves its lightweight correlation contract and can be upgraded to full OTel SDK initialization at application bootstrap.
@@ -84,4 +90,4 @@ Piscina's current guidance supports worker pools for appropriate workloads but n
 
 **WHAT_REMAINS:** runtime commissioning and CI/E2E evidence, plus the next N05↔N04 and N05↔N06 composition passes.
 
-**WHAT_NEXT_AGENT_SHOULD_DO:** inspect this branch and the current GitHub state first; do not recreate any listed component. Continue from the remaining closure gates and verify against the peer repositories before adding new interfaces.
+**WHAT_NEXT_AGENT_SHOULD_DO:** inspect the current `main` GitHub state first; do not recreate any listed component. Continue from the remaining closure gates and verify against the peer repositories before adding new interfaces.
