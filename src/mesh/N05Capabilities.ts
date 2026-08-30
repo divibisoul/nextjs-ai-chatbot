@@ -35,12 +35,20 @@ export function createN05CapabilityGateway() {
     execute: async (request) => {
       const system = systems[request.capability];
       const input = payloadToRequest(request.payload, system);
-      if (request.capability === 'ai.infer' || request.capability.startsWith('conversation.')) return n05InferencePool.run(input, request.source === 'N01' ? 100 : 50);
-      const cached = cache.get(input);
-      if (cached !== undefined) return cached;
-      const result = await n05InferencePool.run(input, request.source === 'N01' ? 100 : 50);
-      cache.set(input, result);
-      return result;
+      const isConversation = request.capability.startsWith('conversation.');
+      const priority = request.source === 'N01' ? 100 : 50;
+
+      // Stateless inference is safely cacheable. Conversation remains uncached
+      // because its result depends on evolving context/history.
+      if (!isConversation) {
+        const cached = cache.get(input);
+        if (cached !== undefined) return cached;
+        const result = await n05InferencePool.run(input, priority);
+        cache.set(input, result);
+        return result;
+      }
+
+      return n05InferencePool.run(input, priority);
     },
   };
   agents.register(inferenceAgent);
@@ -49,10 +57,6 @@ export function createN05CapabilityGateway() {
     gateway.register(capability, (request) => agents.execute(request), ownership);
   }
 
-  // N06 is the authoritative cognitive/pilot nucleus. N05 remains the
-  // inference specialist and can request N06 orchestration through the same
-  // Soul Mesh, creating a complementary N05 <-> N06 cognitive loop without
-  // introducing a parallel bus.
   const collaborationAgent: N05Agent = {
     id: 'N05-n06-collaboration-agent',
     name: 'N05 N06 Collaboration Agent',

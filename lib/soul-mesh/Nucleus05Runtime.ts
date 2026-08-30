@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { executeSoulInference } from './SoulMeshAI';
 import { N05MeshGateway, type N05CapabilityHandler, type N05GatewayRequest, type N05GatewayResponse } from './N05MeshGateway';
 
@@ -28,8 +29,10 @@ export class Nucleus05Runtime {
     const response = await this.gateway.execute({
       capability,
       payload,
-      source: 'N01',
+      source: 'N05',
       correlationId: crypto.randomUUID(),
+      timestamp: Date.now(),
+      nonce: crypto.randomUUID(),
     });
     if (!response.ok) throw new Error(`${response.error?.code ?? 'CAPABILITY_EXECUTION_FAILED'}:${response.error?.message ?? capability}`);
     return response.result;

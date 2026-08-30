@@ -1,6 +1,6 @@
-import { canConsume, soulCapability, type SoulCapability } from './capabilities';
+import { soulCapability, type SoulCapability } from '../../src/soul-mesh/capabilities';
 import type { SoulNucleus } from './SoulMeshProtocol';
-import { ownershipRule } from './N05OwnershipMatrix';
+import { canConsume as canConsumeOwnership, ownershipRule } from './N05OwnershipMatrix';
 
 export type N05CapabilityHandler = (payload: unknown) => unknown | Promise<unknown>;
 
@@ -9,6 +9,9 @@ export interface N05GatewayRequest {
   payload: unknown;
   source: SoulNucleus;
   correlationId: string;
+  traceId?: string;
+  timestamp?: number;
+  nonce?: string;
 }
 
 export interface N05GatewayResponse {
@@ -17,6 +20,7 @@ export interface N05GatewayResponse {
   target: SoulNucleus;
   capability: string;
   correlationId: string;
+  traceId?: string;
   result?: unknown;
   error?: { code: string; message: string; fallback?: readonly SoulNucleus[] };
 }
@@ -44,11 +48,11 @@ export class N05MeshGateway {
   list(): string[] { return [...this.handlers.keys()].sort(); }
 
   async execute(request: N05GatewayRequest): Promise<N05GatewayResponse> {
-    const { capability, payload, source, correlationId } = request;
-    if (!canConsume(capability, source)) {
+    const { capability, payload, source, correlationId, traceId } = request;
+    if (!canConsumeOwnership(source, capability)) {
       const rule = ownershipRule(capability);
       return {
-        ok: false, source: 'N05', target: source, capability, correlationId,
+        ok: false, source: 'N05', target: source, capability, correlationId, traceId,
         error: { code: 'CAPABILITY_SOURCE_NOT_AUTHORIZED', message: `Source ${source} is not authorized for ${capability}`, fallback: rule?.fallback },
       };
     }
@@ -57,17 +61,17 @@ export class N05MeshGateway {
     if (!handler) {
       const rule = ownershipRule(capability);
       return {
-        ok: false, source: 'N05', target: source, capability, correlationId,
+        ok: false, source: 'N05', target: source, capability, correlationId, traceId,
         error: { code: 'CAPABILITY_NOT_IMPLEMENTED', message: `N05 has no executable handler for ${capability}`, fallback: rule?.fallback },
       };
     }
 
     try {
       const result = await handler(payload);
-      return { ok: true, source: 'N05', target: source, capability, correlationId, result };
+      return { ok: true, source: 'N05', target: source, capability, correlationId, traceId, result };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return { ok: false, source: 'N05', target: source, capability, correlationId, error: { code: 'CAPABILITY_EXECUTION_FAILED', message } };
+      return { ok: false, source: 'N05', target: source, capability, correlationId, traceId, error: { code: 'CAPABILITY_EXECUTION_FAILED', message } };
     }
   }
 }
