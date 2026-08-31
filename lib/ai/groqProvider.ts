@@ -60,7 +60,7 @@ export async function generateFastInference(options: FastInferenceOptions): Prom
     if (!text) throw new Error('GROQ_EMPTY_RESPONSE');
     return { text, provider: 'groq', model };
   } catch (error) {
-    if (groqIsUnavailable(error) || error instanceof Error) return fallbackToXai(options);
+    if (groqIsUnavailable(error)) return fallbackToXai(options);
     throw error;
   }
 }
