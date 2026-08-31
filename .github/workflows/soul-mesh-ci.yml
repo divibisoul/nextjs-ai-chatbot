@@ -2,10 +2,21 @@ name: Soul Mesh CI
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      SOUL_MESH_TOKEN: ${{ secrets.SOUL_MESH_TOKEN }}
+      SOUL_MESH_HMAC_SECRET: ${{ secrets.SOUL_MESH_HMAC_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
