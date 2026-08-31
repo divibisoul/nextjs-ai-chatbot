@@ -1,6 +1,7 @@
 export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06';
 export type SoulMeshCapability = { id:string; version:string; description:string; request:boolean; response:boolean; events:boolean; owner?:SoulNucleus; execution?:'cognitive'|'tool'|'native'|'orchestration'|'observability'|'remote' };
 export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
+  { id:'mesh.handshake',version:'1.1',description:'N05 canonical Mesh handshake and capability discovery',request:true,response:true,events:false,owner:'N05',execution:'observability' },
   { id:'mesh.ping',version:'1.0',description:'Connectivity and liveness probe',request:true,response:true,events:false,owner:'N05',execution:'observability' },
   { id:'mesh.describe',version:'1.0',description:'Runtime, protocol and capability discovery',request:true,response:true,events:false,owner:'N05',execution:'observability' },
   { id:'core.health',version:'1.0',description:'N05 runtime health and readiness',request:true,response:true,events:false,owner:'N05',execution:'observability' },
@@ -12,7 +13,6 @@ export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'document-processing',version:'1.0',description:'Document services',request:true,response:true,events:true,owner:'N05',execution:'tool' },
   { id:'context-orchestration',version:'1.0',description:'Context-aware orchestration for N05',request:true,response:true,events:true,owner:'N05',execution:'orchestration' },
   { id:'streaming',version:'1.0',description:'Streaming-capable AI response services',request:true,response:true,events:true,owner:'N05',execution:'cognitive' },
-  { id:'mesh.handshake',version:'1.1',description:'N01 Mesh negotiation and capability discovery',request:true,response:true,events:false,owner:'N01',execution:'remote' },
   { id:'mesh.health',version:'1.1',description:'N01 runtime and transport health',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'mesh.capabilities',version:'1.1',description:'N01 executable capability discovery',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'cognitive.intent',version:'1.0',description:'N01 cognitive intent analysis',request:true,response:true,events:false,owner:'N01',execution:'remote' },
