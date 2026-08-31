@@ -33,7 +33,7 @@ function groqIsUnavailable(error: unknown): boolean {
 async function fallbackToXai(options: FastInferenceOptions): Promise<FastInferenceResult> {
   const result = await generateText({
     model: xai(DEFAULT_XAI_MODEL),
-    messages: options.messages,
+    messages: [...options.messages],
     temperature: options.temperature,
     maxOutputTokens: options.maxCompletionTokens,
   });
@@ -52,7 +52,7 @@ export async function generateFastInference(options: FastInferenceOptions): Prom
   try {
     const response = await groq.chat.completions.create({
       model,
-      messages: options.messages,
+      messages: [...options.messages],
       temperature: options.temperature,
       max_completion_tokens: options.maxCompletionTokens,
     });
