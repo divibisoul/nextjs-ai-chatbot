@@ -1,5 +1,5 @@
 export const N05_ID = 'N05' as const;
-export const N05_PEERS = ['N01','N02','N03','N04','N06'] as const;
+export const N05_PEERS = ['N01','N02','N03','N04','N06','N07'] as const;
 export type N05Peer = (typeof N05_PEERS)[number];
 export type ChannelDirection = 'IN' | 'OUT';
 export function channelId(peer:N05Peer,direction:ChannelDirection){return `N05.${direction}.${peer}`;}
