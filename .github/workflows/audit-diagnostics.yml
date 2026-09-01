@@ -1,0 +1,43 @@
+name: Audit diagnostics
+on:
+  push:
+    branches: [audit/2026-09-01-hardening]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Capture diagnostics
+        shell: bash
+        run: |
+          set +e
+          {
+            echo '=== versions ==='; node --version; pnpm --version
+            echo '=== package.json ==='; cat package.json
+            echo '=== pnpm install lockfile ==='; pnpm install --lockfile-only --no-frozen-lockfile
+            echo "lockfile_exit=$?"
+            echo '=== pnpm install ==='; pnpm install --no-frozen-lockfile
+            echo "install_exit=$?"
+            echo '=== pnpm audit ==='; pnpm audit --audit-level high
+            echo "audit_exit=$?"
+          } 2>&1 | tee audit-diagnostics-n05.txt
+      - name: Commit diagnostics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit-diagnostics-n05.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(audit): capture N05 dependency diagnostics [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
