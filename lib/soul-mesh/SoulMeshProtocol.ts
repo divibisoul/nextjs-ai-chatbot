@@ -25,7 +25,7 @@ export interface SoulMeshTransport {
 export const SOUL_NUCLEI: readonly SoulNucleus[] = ['N01', 'N02', 'N03', 'N04', 'N05', 'N06'];
 export const SOUL_MESH_KINDS: readonly SoulMeshKind[] = ['request', 'response', 'event', 'error'];
 
-export function createSoulMeshMessage<T>(input: Omit<SoulMeshMessage<T>, 'protocol' | 'contractVersion' | 'id' | 'timestamp'> & { contractVersion?: string }): SoulMeshMessage<T> {
+export function createSoulMeshMessage<T>(input: Omit<SoulMeshMessage<T>, 'protocol' | 'contractVersion' | 'id' | 'timestamp'> & { contractVersion?: typeof SOUL_MESH_CONTRACT_VERSION }): SoulMeshMessage<T> {
   return { protocol: SOUL_MESH_PROTOCOL, contractVersion: input.contractVersion ?? SOUL_MESH_CONTRACT_VERSION, id: crypto.randomUUID(), timestamp: Date.now(), ...input };
 }
 
