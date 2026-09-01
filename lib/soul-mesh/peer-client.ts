@@ -1,4 +1,5 @@
-import type { SoulMeshMessage } from './endpoint';
+import type { SoulMeshMessage } from './SoulMeshProtocol';
+import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
 import { randomUUID } from 'crypto';
 
 export const NUCLEUS_ID = 'N05' as const;
@@ -14,7 +15,8 @@ const urls: Record<N05Peer, string | undefined> = {
 };
 
 function assertResponse(message: SoulMeshMessage, response: SoulMeshMessage, target: N05Peer) {
-  if (response.protocol !== message.protocol) throw new Error('SOUL_MESH_PROTOCOL_MISMATCH');
+  if (response.protocol !== SOUL_MESH_PROTOCOL) throw new Error('SOUL_MESH_PROTOCOL_MISMATCH');
+  if (response.contractVersion !== message.contractVersion) throw new Error('SOUL_MESH_CONTRACT_VERSION_MISMATCH');
   if (response.correlationId !== message.correlationId) throw new Error('SOUL_MESH_CORRELATION_MISMATCH');
   if (response.source !== target || response.target !== NUCLEUS_ID) throw new Error('SOUL_MESH_ROUTE_MISMATCH');
 }
@@ -24,18 +26,14 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
   if (!url) throw new Error(`SOUL_MESH_PEER_URL_NOT_CONFIGURED:${target}`);
   if (!capability.trim()) throw new Error('SOUL_MESH_CAPABILITY_REQUIRED');
 
-  const message: SoulMeshMessage = {
-    protocol: 'soul-mesh/1',
-    id: randomUUID(),
-    correlationId: randomUUID(),
+  const message = createSoulMeshMessage({
     source: NUCLEUS_ID,
     target,
     kind: 'request',
     capability,
     payload,
-    timestamp: Date.now(),
-    meta: { runtime: 'nextjs-ai-chatbot', transport: 'http-json', encoding: 'json', version: 'soul-mesh/1' },
-  };
+    correlationId: randomUUID(),
+  });
 
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -43,11 +41,12 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const token = process.env.SOUL_MESH_TOKEN;
-      const response = await fetch(url, {
+      const response = await fetch(`${url.replace(/\/$/, '')}/api/soul-mesh`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(message),
         signal: controller.signal,
+        cache: 'no-store',
       });
       const body = await response.json() as SoulMeshMessage;
       assertResponse(message, body, target);
@@ -55,7 +54,7 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
       return body;
     } catch (error) {
       lastError = error;
-      if (attempt < retries) await new Promise((resolve) => setTimeout(resolve, 150 * 2 ** attempt));
+      if (attempt < retries) await new Promise(resolve => setTimeout(resolve, 150 * 2 ** attempt));
     } finally {
       clearTimeout(timer);
     }
@@ -71,5 +70,5 @@ export async function describePeer(target: N05Peer, timeoutMs?: number) {
   return sendTo(target, 'mesh.describe', {}, timeoutMs);
 }
 
-export const N05_OUT_CHANNELS = PEERS.map((peer) => `N05.OUT.${peer}`);
-export const N05_IN_CHANNELS = PEERS.map((peer) => `N05.IN.${peer}`);
+export const N05_OUT_CHANNELS = PEERS.map(peer => `N05.OUT.${peer}`);
+export const N05_IN_CHANNELS = PEERS.map(peer => `N05.IN.${peer}`);
