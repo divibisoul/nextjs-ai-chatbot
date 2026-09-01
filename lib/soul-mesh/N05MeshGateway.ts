@@ -1,19 +1,9 @@
-import { soulCapability, type SoulCapability } from '../../src/soul-mesh/capabilities';
+import { randomUUID } from 'node:crypto';
+import { N05MeshGateway as CanonicalN05MeshGateway, type MeshRequest as CanonicalMeshRequest, type MeshResponse as CanonicalMeshResponse } from '../../src/mesh/N05MeshGateway';
 import type { SoulNucleus } from './SoulMeshProtocol';
-import { canConsume as canConsumeOwnership, ownershipRule } from './N05OwnershipMatrix';
 
 export type N05CapabilityHandler = (payload: unknown) => unknown | Promise<unknown>;
-
-export interface N05GatewayRequest {
-  capability: string;
-  payload: unknown;
-  source: SoulNucleus;
-  correlationId: string;
-  traceId?: string;
-  timestamp?: number;
-  nonce?: string;
-}
-
+export interface N05GatewayRequest extends Omit<CanonicalMeshRequest, 'target'> { target?: 'N05'; }
 export interface N05GatewayResponse {
   ok: boolean;
   source: 'N05';
@@ -21,21 +11,20 @@ export interface N05GatewayResponse {
   capability: string;
   correlationId: string;
   traceId?: string;
+  contractVersion: '1.1.0';
   result?: unknown;
   error?: { code: string; message: string; fallback?: readonly SoulNucleus[] };
 }
 
+/** Compatibility facade. The canonical execution implementation lives in src/mesh/N05MeshGateway. */
 export class N05MeshGateway {
-  private readonly handlers = new Map<string, N05CapabilityHandler>();
+  private readonly canonical = new CanonicalN05MeshGateway();
 
-  register(capability: string, handler: N05CapabilityHandler, ownership?: Partial<SoulCapability>): this {
-    if (!capability.trim()) throw new Error('N05_CAPABILITY_ID_REQUIRED');
-    if (typeof handler !== 'function') throw new Error(`N05_HANDLER_INVALID:${capability}`);
-    const declared = soulCapability(capability);
-    const rule = ownershipRule(capability);
-    const owner = ownership?.owner ?? declared?.owner ?? rule?.owner;
-    if (owner && owner !== 'N05') throw new Error(`N05_NOT_OWNER:${capability}:${owner}`);
-    this.handlers.set(capability, handler);
+  register(capability: string, handler: N05CapabilityHandler, ownership?: { owner?: SoulNucleus; consumers?: SoulNucleus[] }): this {
+    this.canonical.register(capability, async request => handler(request.payload), {
+      owner: (ownership?.owner ?? 'N05') as 'N05',
+      consumers: ownership?.consumers ?? ['N01','N02','N03','N04','N05','N06'],
+    });
     return this;
   }
 
@@ -44,34 +33,33 @@ export class N05MeshGateway {
     return this;
   }
 
-  has(capability: string): boolean { return this.handlers.has(capability); }
-  list(): string[] { return [...this.handlers.keys()].sort(); }
+  has(capability: string): boolean { return this.canonical['handlers'].has(capability); }
+  list(): string[] { return this.canonical['handlers'] ? [...this.canonical['handlers'].keys()].sort() : []; }
 
   async execute(request: N05GatewayRequest): Promise<N05GatewayResponse> {
-    const { capability, payload, source, correlationId, traceId } = request;
-    if (!canConsumeOwnership(source, capability)) {
-      const rule = ownershipRule(capability);
-      return {
-        ok: false, source: 'N05', target: source, capability, correlationId, traceId,
-        error: { code: 'CAPABILITY_SOURCE_NOT_AUTHORIZED', message: `Source ${source} is not authorized for ${capability}`, fallback: rule?.fallback },
-      };
-    }
-
-    const handler = this.handlers.get(capability);
-    if (!handler) {
-      const rule = ownershipRule(capability);
-      return {
-        ok: false, source: 'N05', target: source, capability, correlationId, traceId,
-        error: { code: 'CAPABILITY_NOT_IMPLEMENTED', message: `N05 has no executable handler for ${capability}`, fallback: rule?.fallback },
-      };
-    }
-
-    try {
-      const result = await handler(payload);
-      return { ok: true, source: 'N05', target: source, capability, correlationId, traceId, result };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { ok: false, source: 'N05', target: source, capability, correlationId, traceId, error: { code: 'CAPABILITY_EXECUTION_FAILED', message } };
-    }
+    const canonicalRequest: CanonicalMeshRequest = {
+      id: request.id ?? randomUUID(),
+      correlationId: request.correlationId ?? randomUUID(),
+      traceId: request.traceId ?? randomUUID(),
+      contractVersion: request.contractVersion ?? '1.1.0',
+      source: request.source,
+      target: 'N05',
+      capability: request.capability,
+      payload: request.payload,
+      timestamp: request.timestamp ?? Date.now(),
+      nonce: request.nonce,
+      hmac: request.hmac,
+    };
+    const result: CanonicalMeshResponse = await this.canonical.execute(canonicalRequest);
+    return {
+      ok: result.status === 'ok',
+      source: 'N05',
+      target: request.source,
+      capability: request.capability,
+      correlationId: result.correlationId,
+      traceId: result.traceId,
+      contractVersion: result.contractVersion,
+      ...(result.status === 'ok' ? { result: result.result } : { error: result.error }),
+    };
   }
 }
