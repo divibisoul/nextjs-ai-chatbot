@@ -4,7 +4,16 @@ import type { SoulMeshMessage, SoulMeshTransport } from './SoulMeshProtocol';
 import { SoulMeshTransportMultiplexer } from './SoulMeshTransportMultiplexer';
 
 const message: SoulMeshMessage = {
-  protocol: 'soul-mesh/1', id: 'id', correlationId: 'corr', source: 'N05', target: 'N01', kind: 'request', capability: 'mesh.ping', payload: {}, timestamp: Date.now(),
+  protocol: 'soul-mesh/1',
+  contractVersion: '1.1.0',
+  id: 'id',
+  correlationId: 'corr',
+  source: 'N05',
+  target: 'N01',
+  kind: 'request',
+  capability: 'mesh.ping',
+  payload: {},
+  timestamp: Date.now(),
 };
 
 function transport(send: SoulMeshTransport['send']): SoulMeshTransport {
