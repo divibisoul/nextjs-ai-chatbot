@@ -11,12 +11,6 @@ type Job = {
   reject:(reason:unknown)=>void;
 };
 
-/**
- * Priority scheduler for N05 inference. Piscina is used when a production-ready
- * compiled worker URL is supplied; otherwise the scheduler safely falls back to
- * the existing async provider path. This avoids pretending that an uncompiled
- * TypeScript worker is production-executable inside Next.js.
- */
 export class N05InferencePool {
   private readonly concurrency:number;
   private readonly queue:Job[]=[];
@@ -29,14 +23,7 @@ export class N05InferencePool {
     this.concurrency=Number.isFinite(configured)&&configured>0?Math.floor(configured):Math.max(1,os.cpus().length);
     const workerUrl=process.env.N05_PISCINA_WORKER_URL?.trim();
     if(workerUrl){
-      this.piscina=new Piscina({
-        filename:workerUrl,
-        minThreads:1,
-        maxThreads:this.concurrency,
-        maxQueue:Math.max(1,this.concurrency*this.concurrency),
-        idleTimeout:1000,
-        recordTiming:true,
-      });
+      this.piscina=new Piscina({filename:workerUrl,minThreads:1,maxThreads:this.concurrency,maxQueue:Math.max(1,this.concurrency*this.concurrency),idleTimeout:1000,recordTiming:true});
     }
   }
 
@@ -60,19 +47,18 @@ export class N05InferencePool {
   }
 
   stats(){
+    const histogram=this.piscina?.histogram;
     return {
       active:this.active,
       queued:this.queue.length,
       concurrency:this.concurrency,
       piscinaEnabled:Boolean(this.piscina),
-      piscinaRunTime:this.piscina?.runTime,
-      piscinaWaitTime:this.piscina?.waitTime,
+      piscinaRunTime:histogram?.runTime,
+      piscinaWaitTime:histogram?.waitTime,
     };
   }
 
-  async close(){
-    await this.piscina?.destroy();
-  }
+  async close(){await this.piscina?.destroy();}
 }
 
 export const n05InferencePool=new N05InferencePool();
