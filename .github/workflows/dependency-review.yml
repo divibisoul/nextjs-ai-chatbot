@@ -11,16 +11,20 @@ permissions:
 jobs:
   dependency-security:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
-          version: 9.12.3
+          version: 9.15.9
+          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Audit high-severity dependencies
-        run: pnpm audit --audit-level high
+      - name: Synchronize dependency lockfile
+        run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Install without mutating the lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Audit production dependency graph
+        run: pnpm audit --prod --audit-level high
