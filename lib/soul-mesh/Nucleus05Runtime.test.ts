@@ -14,11 +14,11 @@ test('N05 refuses undeclared executable capabilities', async () => {
   await assert.rejects(() => runtime.execute('missing.capability', null), /CAPABILITY_HANDLER_NOT_REGISTERED/);
 });
 
-test('N05 exposes exactly five bidirectional peer channels', () => {
-  assert.equal(N05_PEERS.length, 5);
-  assert.equal(N05_IN_CHANNELS.length, 5);
-  assert.equal(N05_OUT_CHANNELS.length, 5);
-  assert.equal(N05_CHANNEL_COUNT, 10);
-  assert.deepEqual(N05_IN_CHANNELS, ['N05.IN.N01','N05.IN.N02','N05.IN.N03','N05.IN.N04','N05.IN.N06']);
-  assert.deepEqual(N05_OUT_CHANNELS, ['N05.OUT.N01','N05.OUT.N02','N05.OUT.N03','N05.OUT.N04','N05.OUT.N06']);
+test('N05 exposes every current bidirectional peer channel, including N07', () => {
+  assert.equal(N05_PEERS.length, 6);
+  assert.equal(N05_IN_CHANNELS.length, 6);
+  assert.equal(N05_OUT_CHANNELS.length, 6);
+  assert.equal(N05_CHANNEL_COUNT, 12);
+  assert.deepEqual(N05_IN_CHANNELS, ['N05.IN.N01','N05.IN.N02','N05.IN.N03','N05.IN.N04','N05.IN.N06','N05.IN.N07']);
+  assert.deepEqual(N05_OUT_CHANNELS, ['N05.OUT.N01','N05.OUT.N02','N05.OUT.N03','N05.OUT.N04','N05.OUT.N06','N05.OUT.N07']);
 });
