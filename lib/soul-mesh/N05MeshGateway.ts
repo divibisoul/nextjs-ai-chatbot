@@ -33,8 +33,8 @@ export class N05MeshGateway {
     return this;
   }
 
-  has(capability: string): boolean { return this.canonical['handlers'].has(capability); }
-  list(): string[] { return this.canonical['handlers'] ? [...this.canonical['handlers'].keys()].sort() : []; }
+  has(capability: string): boolean { return this.canonical.has(capability); }
+  list(): string[] { return this.canonical.list(); }
 
   async execute(request: N05GatewayRequest): Promise<N05GatewayResponse> {
     const canonicalRequest: CanonicalMeshRequest = {
