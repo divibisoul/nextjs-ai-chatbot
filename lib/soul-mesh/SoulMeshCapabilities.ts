@@ -1,4 +1,4 @@
-export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06';
+export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06'|'N07';
 export type SoulMeshCapability = { id:string; version:string; description:string; request:boolean; response:boolean; events:boolean; owner?:SoulNucleus; execution?:'cognitive'|'tool'|'native'|'orchestration'|'observability'|'remote' };
 export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'mesh.handshake',version:'1.1',description:'N05 canonical Mesh handshake and capability discovery',request:true,response:true,events:false,owner:'N05',execution:'observability' },
@@ -22,4 +22,7 @@ export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'android.battery',version:'1.0',description:'N01 Android battery state',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'android.memory',version:'1.0',description:'N01 Android memory state',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'android.network',version:'1.0',description:'N01 Android network state',request:true,response:true,events:true,owner:'N01',execution:'remote' },
+  { id:'n07.neural.forward',version:'1.0',description:'N07 neural forward execution; final fusion-stage capability',request:true,response:true,events:false,owner:'N07',execution:'remote' },
+  { id:'n07.cognitive.execute',version:'1.0',description:'N07 fused cognitive execution; final fusion-stage capability',request:true,response:true,events:false,owner:'N07',execution:'remote' },
+  { id:'n07.compute.execute',version:'1.0',description:'N07 federated compute execution; final fusion-stage capability',request:true,response:true,events:false,owner:'N07',execution:'remote' },
 ];
