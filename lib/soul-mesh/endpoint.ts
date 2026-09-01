@@ -7,10 +7,10 @@ import { createN05CapabilityGateway } from '../../src/mesh/N05Capabilities';
 export const NUCLEUS_ID = 'N05' as const;
 export const SOUL_MESH_PROTOCOL = 'soul-mesh/1' as const;
 export const SOUL_MESH_CONTRACT_VERSION = '1.1.0' as const;
-export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06';
+export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06'|'N07';
 export type NucleusId = SoulNucleus;
-export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; contractVersion: typeof SOUL_MESH_CONTRACT_VERSION; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string } };
-const nuclei = new Set<SoulNucleus>(['N01','N02','N03','N04','N05','N06']);
+export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; contractVersion: typeof SOUL_MESH_CONTRACT_VERSION; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string; traceId?: string } };
+const nuclei = new Set<SoulNucleus>(['N01','N02','N03','N04','N05','N06','N07']);
 const capabilityGateway = createN05CapabilityGateway();
 
 export function validateMeshMessage(m: SoulMeshMessage) {
@@ -22,12 +22,13 @@ export function validateMeshMessage(m: SoulMeshMessage) {
   if (!['request','response','event','error'].includes(m.kind)) throw new Error('INVALID_MESSAGE_KIND');
   if (!m.capability && m.kind !== 'event') throw new Error('MISSING_CAPABILITY');
   if (!Number.isFinite(m.timestamp)) throw new Error('INVALID_TIMESTAMP');
-  if (Math.abs(Date.now() - m.timestamp) > 5 * 60 * 1000) throw new Error('STALE_MESSAGE');
+  if (Math.abs(Date.now() - m.timestamp) > 30_000) throw new Error('STALE_MESSAGE');
+  if (m.meta?.traceId !== undefined && (typeof m.meta.traceId !== 'string' || m.meta.traceId.length > 200)) throw new Error('INVALID_TRACE_ID');
   return true;
 }
 
 function result(message: SoulMeshMessage, payload: unknown, kind: SoulMeshMessage['kind'] = 'response'): SoulMeshMessage {
-  return { protocol: SOUL_MESH_PROTOCOL, contractVersion: SOUL_MESH_CONTRACT_VERSION, id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind, capability: message.capability, payload, timestamp: Date.now(), meta: { runtime: 'nextjs-ai-chatbot', transport: 'http-json', encoding: 'json', version: SOUL_MESH_CONTRACT_VERSION, nonce: crypto.randomUUID() } };
+  return { protocol: SOUL_MESH_PROTOCOL, contractVersion: SOUL_MESH_CONTRACT_VERSION, id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind, capability: message.capability, payload, timestamp: Date.now(), meta: { runtime: 'nextjs-ai-chatbot', transport: 'HTTP', encoding: 'json', version: SOUL_MESH_CONTRACT_VERSION, nonce: crypto.randomUUID(), traceId: message.meta?.traceId ?? message.correlationId } };
 }
 
 export function createNucleus05MeshHandlers(extra: Record<string, N05CapabilityHandler> = {}) {
