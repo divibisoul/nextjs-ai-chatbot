@@ -1,17 +1,26 @@
-name: Dependency Review
+name: Dependency Security
 
 on:
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  dependency-review:
+  dependency-security:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Dependency review
-        uses: actions/dependency-review-action@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          fail-on-severity: high
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Audit high-severity dependencies
+        run: pnpm audit --audit-level high
