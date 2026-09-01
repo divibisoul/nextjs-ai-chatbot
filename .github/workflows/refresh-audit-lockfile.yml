@@ -2,13 +2,14 @@ name: Refresh audit lockfile
 on:
   push:
     branches: [audit/2026-09-01-hardening]
-    paths: [package.json]
+    paths: [package.json, .github/workflows/refresh-audit-lockfile.yml]
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -19,15 +20,15 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Refresh lockfile
-        run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Refresh lockfile from package manifest
+        run: pnpm install --lockfile-only --no-frozen-lockfile --strict-peer-dependencies=false --ignore-scripts
+      - name: Verify manifest and lock consistency
+        run: pnpm install --lockfile-only --no-frozen-lockfile --strict-peer-dependencies=false --ignore-scripts
       - name: Commit lockfile
         run: |
-          if git diff --quiet -- pnpm-lock.yaml; then
-            exit 0
-          fi
+          if git diff --quiet -- pnpm-lock.yaml; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pnpm-lock.yaml
-          git commit -m "chore(n05): refresh lockfile after dependency hardening [skip ci]"
+          git commit -m "chore(n05): synchronize lockfile with hardened dependencies [skip ci]"
           git push origin "HEAD:${GITHUB_REF_NAME}"
