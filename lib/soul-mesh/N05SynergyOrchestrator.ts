@@ -5,12 +5,21 @@ export type N05SynergyStep = { nucleus: N05Peer; capability: string; payload: un
 export type N05SynergyResult = { correlationId: string; steps: Array<{ nucleus: N05Peer; capability: string; result: unknown }> };
 
 type PeerDescription = {
+  /** Capabilities that the peer explicitly exposes as executable handlers. */
   executableCapabilities?: string[];
-  capabilities?: Array<string | { id?: string; name?: string }>;
+  /** Declared capabilities are descriptive only and MUST NOT authorize invocation. */
   declaredCapabilities?: string[];
+  /** Backwards-compatible generic capability inventory; descriptive only. */
+  capabilities?: Array<string | { id?: string; name?: string }>;
 };
 
-/** Resolve a capability from the peer's real discovery snapshot before execution. */
+/**
+ * Resolve a capability from the peer's live discovery snapshot before execution.
+ *
+ * Discovery is only an execution contract when the peer explicitly advertises the
+ * capability as executable. Generic/declared inventories are intentionally ignored
+ * for routing so that discovery cannot create a false "implemented" guarantee.
+ */
 export async function resolvePeerCapability(
   nucleus: N05Peer,
   preferred: readonly string[],
@@ -18,14 +27,12 @@ export async function resolvePeerCapability(
 ): Promise<string> {
   const response = await describePeer(nucleus, timeoutMs);
   const payload = (response.payload ?? {}) as PeerDescription;
-  const advertised = new Set<string>([
-    ...(payload.executableCapabilities ?? []),
-    ...(payload.declaredCapabilities ?? []),
-    ...(payload.capabilities ?? []).flatMap(item => typeof item === 'string' ? [item] : [item.id ?? item.name].filter(Boolean) as string[]),
-  ]);
+  const executable = new Set(payload.executableCapabilities ?? []);
 
-  const resolved = preferred.find(capability => advertised.has(capability));
-  if (!resolved) throw new Error(`N05_NO_COMPATIBLE_CAPABILITY:${nucleus}:${preferred.join('|')}`);
+  const resolved = preferred.find(capability => executable.has(capability));
+  if (!resolved) {
+    throw new Error(`N05_NO_EXECUTABLE_CAPABILITY:${nucleus}:${preferred.join('|')}`);
+  }
   return resolved;
 }
 
