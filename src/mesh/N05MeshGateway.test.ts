@@ -12,6 +12,7 @@ test('N05 owns inference and accepts an authorized N01 request', async () => {
   const response = await gateway.execute({
     source: 'N01',
     target: 'N05',
+    contractVersion: '1.1.0',
     capability: 'inference.reason',
     payload: 'test',
     timestamp: Date.now(),
@@ -19,6 +20,7 @@ test('N05 owns inference and accepts an authorized N01 request', async () => {
   });
 
   assert.equal(response.status, 'ok');
+  assert.equal(response.contractVersion, '1.1.0');
   assert.equal(response.source, 'N05');
   assert.equal(response.target, 'N01');
   assert.equal(response.capability, 'inference.reason');
@@ -28,12 +30,14 @@ test('N05 owns inference and accepts an authorized N01 request', async () => {
 test('N05 rejects a replayed nonce', async () => {
   const gateway = new N05MeshGateway();
   gateway.register('inference.reason', () => 'ok', { owner: 'N05', consumers: ['N01'] });
-  const request = { source: 'N01' as const, target: 'N05' as const, capability: 'inference.reason', payload: 'test', timestamp: Date.now(), nonce: 'replay-test' };
+  const request = { source: 'N01' as const, target: 'N05' as const, contractVersion: '1.1.0', capability: 'inference.reason', payload: 'test', timestamp: Date.now(), nonce: 'replay-test' };
 
   const first = await gateway.execute(request);
   const second = await gateway.execute(request);
 
   assert.equal(first.status, 'ok');
+  assert.equal(first.contractVersion, '1.1.0');
   assert.equal(second.status, 'error');
   assert.equal(second.error?.code, 'MESH_SECURITY_REJECTED');
+  assert.equal(second.contractVersion, '1.1.0');
 });
