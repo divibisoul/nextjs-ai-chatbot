@@ -1,6 +1,6 @@
+import { createHmac, randomUUID } from 'node:crypto';
 import type { SoulMeshMessage } from './SoulMeshProtocol';
 import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
-import { randomUUID } from 'crypto';
 
 export const NUCLEUS_ID = 'N05' as const;
 export const PEERS = ['N01', 'N02', 'N03', 'N04', 'N06'] as const;
@@ -14,6 +14,27 @@ const urls: Record<N05Peer, string | undefined> = {
   N06: process.env.SOUL_MESH_N06_URL,
 };
 
+function nonce(): string { return randomUUID().replaceAll('-', '').padEnd(32, '0').slice(0, 32); }
+function canonical(message: SoulMeshMessage, nonceValue: string): string {
+  return JSON.stringify({
+    protocol: message.protocol,
+    contractVersion: message.contractVersion,
+    id: message.id,
+    correlationId: message.correlationId,
+    source: message.source,
+    target: message.target,
+    kind: message.kind,
+    capability: message.capability ?? null,
+    payload: message.payload,
+    timestamp: message.timestamp,
+    meta: message.meta ?? null,
+    nonce: nonceValue,
+  });
+}
+function hmac(message: SoulMeshMessage, nonceValue: string, secret: string): string {
+  return createHmac('sha256', secret).update(canonical(message, nonceValue), 'utf8').digest('hex');
+}
+
 function assertResponse(message: SoulMeshMessage, response: SoulMeshMessage, target: N05Peer) {
   if (response.protocol !== SOUL_MESH_PROTOCOL) throw new Error('SOUL_MESH_PROTOCOL_MISMATCH');
   if (response.contractVersion !== message.contractVersion) throw new Error('SOUL_MESH_CONTRACT_VERSION_MISMATCH');
@@ -26,13 +47,16 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
   if (!url) throw new Error(`SOUL_MESH_PEER_URL_NOT_CONFIGURED:${target}`);
   if (!capability.trim()) throw new Error('SOUL_MESH_CAPABILITY_REQUIRED');
 
+  const correlationId = randomUUID();
+  const nonceValue = nonce();
   const message = createSoulMeshMessage({
     source: NUCLEUS_ID,
     target,
     kind: 'request',
     capability,
     payload,
-    correlationId: randomUUID(),
+    correlationId,
+    meta: { runtime: 'nextjs-ai-chatbot', transport: 'HTTP', encoding: 'json', version: '1.1.0', nonce: nonceValue, traceId: correlationId },
   });
 
   let lastError: unknown;
@@ -40,17 +64,25 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const token = process.env.SOUL_MESH_TOKEN;
+      const secret = process.env.SOUL_MESH_HMAC_SECRET?.trim() ?? '';
+      const token = process.env.SOUL_MESH_TOKEN?.trim() ?? '';
+      const headers: Record<string, string> = {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        'x-soul-correlation-id': correlationId,
+      };
+      if (secret) {
+        headers['x-soul-mesh-nonce'] = nonceValue;
+        headers['x-soul-mesh-hmac'] = hmac(message, nonceValue, secret);
+      } else if (token) {
+        headers.authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`${url.replace(/\/$/, '')}/api/soul-mesh`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify(message),
-        signal: controller.signal,
-        cache: 'no-store',
+        method: 'POST', headers, body: JSON.stringify(message), signal: controller.signal, cache: 'no-store',
       });
       const body = await response.json() as SoulMeshMessage;
       assertResponse(message, body, target);
-      if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}`);
+      if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
       return body;
     } catch (error) {
       lastError = error;
