@@ -23,6 +23,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
+import { n07Execute } from '@/lib/ai/tools/n07-execute';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -50,9 +51,7 @@ export function getStreamContext() {
       });
     } catch (error: any) {
       if (error.message.includes('REDIS_URL')) {
-        console.log(
-          ' > Resumable streams are disabled due to missing REDIS_URL',
-        );
+        console.log(' > Resumable streams are disabled due to missing REDIS_URL');
       } else {
         console.error(error);
       }
@@ -92,60 +91,26 @@ export async function POST(request: Request) {
     }
 
     const userType: UserType = session.user.type;
-
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
+    const messageCount = await getMessageCountByUserId({ id: session.user.id, differenceInHours: 24 });
 
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError('rate_limit:chat').toResponse();
     }
 
     const chat = await getChatById({ id });
-
     if (!chat) {
-      const title = await generateTitleFromUserMessage({
-        message,
-      });
-
-      await saveChat({
-        id,
-        userId: session.user.id,
-        title,
-        visibility: selectedVisibilityType,
-      });
-    } else {
-      if (chat.userId !== session.user.id) {
-        return new ChatSDKError('forbidden:chat').toResponse();
-      }
+      const title = await generateTitleFromUserMessage({ message });
+      await saveChat({ id, userId: session.user.id, title, visibility: selectedVisibilityType });
+    } else if (chat.userId !== session.user.id) {
+      return new ChatSDKError('forbidden:chat').toResponse();
     }
 
     const messagesFromDb = await getMessagesByChatId({ id });
     const uiMessages = [...convertToUIMessages(messagesFromDb), message];
-
     const { longitude, latitude, city, country } = geolocation(request);
+    const requestHints: RequestHints = { longitude, latitude, city, country };
 
-    const requestHints: RequestHints = {
-      longitude,
-      latitude,
-      city,
-      country,
-    };
-
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: message.id,
-          role: 'user',
-          parts: message.parts,
-          attachments: [],
-          createdAt: new Date(),
-        },
-      ],
-    });
-
+    await saveMessages({ messages: [{ chatId: id, id: message.id, role: 'user', parts: message.parts, attachments: [], createdAt: new Date() }] });
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
@@ -159,93 +124,46 @@ export async function POST(request: Request) {
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
+              : ['getWeather', 'createDocument', 'updateDocument', 'requestSuggestions', 'n07Execute'],
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
             getWeather,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
+            requestSuggestions: requestSuggestions({ session, dataStream }),
+            n07Execute,
           },
-          experimental_telemetry: {
-            isEnabled: isProductionEnvironment,
-            functionId: 'stream-text',
-          },
+          experimental_telemetry: { isEnabled: isProductionEnvironment, functionId: 'stream-text' },
         });
 
         result.consumeStream();
-
-        dataStream.merge(
-          result.toUIMessageStream({
-            sendReasoning: true,
-          }),
-        );
+        dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
       },
       generateId: generateUUID,
       onFinish: async ({ messages }) => {
-        await saveMessages({
-          messages: messages.map((message) => ({
-            id: message.id,
-            role: message.role,
-            parts: message.parts,
-            createdAt: new Date(),
-            attachments: [],
-            chatId: id,
-          })),
-        });
+        await saveMessages({ messages: messages.map((message) => ({ id: message.id, role: message.role, parts: message.parts, createdAt: new Date(), attachments: [], chatId: id })) });
       },
-      onError: () => {
-        return 'Oops, an error occurred!';
-      },
+      onError: () => 'Oops, an error occurred!',
     });
 
     const streamContext = getStreamContext();
-
     if (streamContext) {
-      return new Response(
-        await streamContext.resumableStream(streamId, () =>
-          stream.pipeThrough(new JsonToSseTransformStream()),
-        ),
-      );
-    } else {
-      return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
+      return new Response(await streamContext.resumableStream(streamId, () => stream.pipeThrough(new JsonToSseTransformStream())));
     }
+    return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
   } catch (error) {
-    if (error instanceof ChatSDKError) {
-      return error.toResponse();
-    }
+    if (error instanceof ChatSDKError) return error.toResponse();
   }
 }
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-
-  if (!id) {
-    return new ChatSDKError('bad_request:api').toResponse();
-  }
-
+  if (!id) return new ChatSDKError('bad_request:api').toResponse();
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:chat').toResponse();
-  }
-
+  if (!session?.user) return new ChatSDKError('unauthorized:chat').toResponse();
   const chat = await getChatById({ id });
-
-  if (chat.userId !== session.user.id) {
-    return new ChatSDKError('forbidden:chat').toResponse();
-  }
-
+  if (chat.userId !== session.user.id) return new ChatSDKError('forbidden:chat').toResponse();
   const deletedChat = await deleteChatById({ id });
-
   return Response.json(deletedChat, { status: 200 });
 }
