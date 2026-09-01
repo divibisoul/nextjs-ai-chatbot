@@ -2,11 +2,14 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { canConsume, ownershipFor, type N05Nucleus } from './N05OwnershipMatrix';
 import { n05CircuitBreaker, withN05Retry } from './N05Resilience';
 
+const CONTRACT_VERSION = '1.1.0' as const;
+
 type Handler = (request: MeshRequest) => Promise<unknown> | unknown;
 export type MeshRequest = {
   id?: string;
   correlationId?: string;
   traceId?: string;
+  contractVersion?: string;
   source: N05Nucleus;
   target: 'N05';
   capability: string;
@@ -19,6 +22,7 @@ export type MeshResponse = {
   id: string;
   correlationId: string;
   traceId: string;
+  contractVersion: typeof CONTRACT_VERSION;
   source: 'N05';
   target: N05Nucleus;
   capability: string;
@@ -54,8 +58,9 @@ export class N05MeshGateway {
   const id=request.id??randomUUID();
   const correlationId=request.correlationId??randomUUID();
   const traceId=request.traceId??randomUUID();
-  const response=(status:MeshResponse['status'],result?:unknown,error?:{code:string;message:string}):MeshResponse=>({id,correlationId,traceId,source:'N05',target:request.source,capability:request.capability,status,...(result===undefined?{}:{result}),...(error===undefined?{}:{error})});
+  const response=(status:MeshResponse['status'],result?:unknown,error?:{code:string;message:string}):MeshResponse=>({id,correlationId,traceId,contractVersion:CONTRACT_VERSION,source:'N05',target:request.source,capability:request.capability,status,...(result===undefined?{}:{result}),...(error===undefined?{}:{error})});
 
+  if(request.contractVersion && request.contractVersion!==CONTRACT_VERSION)return response('error',undefined,{code:'MESH_CONTRACT_VERSION_MISMATCH',message:`Expected ${CONTRACT_VERSION}`});
   if(!this.securityAllowed(request))return response('error',undefined,{code:'MESH_SECURITY_REJECTED',message:'Mesh request failed timestamp, replay, rate-limit or signature validation'});
   const ownershipKey=ownershipCapability(request.capability);
   const rule=ownershipFor(ownershipKey);
@@ -101,7 +106,7 @@ export class N05MeshGateway {
   const required=process.env.SOUL_MESH_GATEWAY_HMAC_REQUIRED==='true';
   if(!secret)return !required;
   if(!request.hmac)return !required;
-  const canonical=JSON.stringify({id:request.id??'',correlationId:request.correlationId??'',traceId:request.traceId??'',source:request.source,target:request.target,capability:request.capability,payload:request.payload,timestamp:request.timestamp??0,nonce:request.nonce??''});
+  const canonical=JSON.stringify({id:request.id??'',correlationId:request.correlationId??'',traceId:request.traceId??'',contractVersion:request.contractVersion??CONTRACT_VERSION,source:request.source,target:request.target,capability:request.capability,payload:request.payload,timestamp:request.timestamp??0,nonce:request.nonce??''});
   const expected=createHmac('sha256',secret).update(canonical).digest('hex');
   const a=Buffer.from(request.hmac,'utf8');
   const b=Buffer.from(expected,'utf8');
