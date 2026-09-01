@@ -2,10 +2,18 @@
 
 This repository is N05, an independent AI nucleus cooperating through the single Soul Mesh.
 
-GitHub is source of truth. Preserve and adapt working functionality; audit before and after changes; continue structural implementation when runtime commissioning is unavailable; never create a second Mesh. Every nucleus is an independent AI with agents, capabilities, tools, ingress, egress, discovery, delegation and response. Authentication is separate from capability authorization. Maintain the common identity/correlation/timestamp/nonce/HMAC contract. Do not duplicate existing modules; adapt them. Research viable alternatives before accepting limitations.
+## Governing directive
+GitHub is the source of truth. Inspect current HEAD/state before every mutation and re-audit after every mutation. Whenever an audit finds an incomplete, inactive, broken, inconsistent, unreachable, untested, stale or non-functional area, correct/complete/integrate/optimize it immediately. Never claim completion because a file edit or commit occurred; verify the resulting repository state and the strongest available evidence. Never stop solely because of an error or severe failure: diagnose root cause, research authoritative documentation and viable alternatives, then continue through the least disruptive robust path. Preserve working functionality and adapt before replacement; never create a second Mesh.
 
-Engineering pair order: N06↔N05 → N05↔N04 → N04↔N03 → N03↔N02 → N02↔N01. Runtime routing remains Mesh-wide; sequence is engineering dependency order.
+Every nucleus is an independent AI. Agents, capabilities, functions, tools, providers, context and native execution are first-class fusion assets; transport-only connectivity is not functional fusion. Authentication is distinct from capability authorization. Maintain common identity/correlation/timestamp/nonce/HMAC protections where the canonical contract applies.
 
-Two adjacent fronts may proceed simultaneously when safe. The shared N05 must remain compatible with both N06 and N04. Each work unit leaves a GitHub handoff recording source, target, connection, commit, changed files, findings, corrections, capabilities/agents/tools affected, dependencies, remaining work, compatibility, next consumer and commissioning status.
+## Evidence and time
+Evidence order: live runtime/E2E > integration test > unit/build/typecheck/race validation > contract/schema validation > static inspection. A lower evidence level never upgrades a higher claim without proof. Record start time for substantial fronts, reassess long-running work, and before delivery verify current HEAD, changed files, latest CI/check state, unresolved blockers and elapsed engineering time. Coverage/health graphs are mandatory delivery aids, never substitutes for tests.
 
-Completion requires compatible AI responsibility, agents, tools, capabilities, Mesh ingress/egress, discovery, delegation, correlation, authorization and failure handling. Optimize N05's role as an integration point for complementary capabilities, reuse, parallelism, low latency, resilience, least privilege and minimal duplication.
+## Engineering order
+N06↔N05 → N05↔N04 → N04↔N03 → N03↔N02 → N02↔N01 → final N01↔N06↔N07 fusion. Runtime routing remains Mesh-wide; order is dependency order. N07 is deliberately the final commissioning nucleus and must receive stabilized ingress/egress, discovery, delegation, authorization, correlation, recovery, functions, agents and tools from the preceding fronts.
+
+Two adjacent fronts may proceed simultaneously when their mutations are compatible. Every handoff records source, target, connection, commit, changed files, findings, corrections, affected capabilities/agents/tools, dependencies, elapsed time, verification evidence, remaining work, compatibility, next consumer and commissioning status.
+
+## Closure
+A nucleus is not complete because code exists or ping/health succeeds. Structural closure requires compatible AI role, agents, tools, capabilities, Mesh ingress/egress, discovery, delegation, correlation, authorization, resilience, observability and CI evidence. Runtime commissioning is separate and must be reported honestly.
