@@ -1,0 +1,55 @@
+name: N05 Executor Runner Validation
+
+on:
+  push:
+    branches: [audit/2026-09-01-hardening]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: N05 runner + pnpm + audit
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: FIRST EXECUTION STEP - capture runner state
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "RUNNER_NAME=${RUNNER_NAME:-}"
+          echo "RUNNER_OS=${RUNNER_OS:-}"
+          echo "RUNNER_ARCH=${RUNNER_ARCH:-}"
+          echo "GITHUB_RUN_ID=${GITHUB_RUN_ID:-}"
+          node --version
+          npm --version
+          test -n "${RUNNER_NAME:-}" || { echo "ERROR: GitHub runner was not provisioned."; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Generate diagnostics
+        run: node scripts/diagnostics.mjs
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n05-diagnostics
+          path: .diagnostics/
+          if-no-files-found: error
+      - name: Install frozen lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Mesh tests
+        run: pnpm run test:mesh
