@@ -1,0 +1,57 @@
+name: N04 validation diagnostics
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '9.12.3'
+jobs:
+  validate:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: FIRST EXECUTION STEP - capture runner state
+        shell: bash
+        run: |
+          set -u
+          mkdir -p "$RUNNER_TEMP/n04-first-step"
+          { date -u; uname -a || true; cat /etc/os-release || true; node --version || true; npm --version || true; df -hT || true; free -h || true; env | cut -d= -f1 | sort || true; } 2>&1 | tee "$RUNNER_TEMP/n04-first-step/runner.log"
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Verify toolchain
+        run: node --version && pnpm --version
+      - name: Install dependencies from lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm run build
+      - name: Lint
+        run: pnpm run lint
+      - name: Mesh tests
+        run: pnpm run test:mesh
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Mesh typecheck
+        run: pnpm run typecheck:mesh
+      - name: Emergency diagnostics
+        if: failure()
+        run: node scripts/diagnostics.mjs
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n04-diagnostics-${{ github.run_id }}
+          path: .diagnostics/
+          if-no-files-found: ignore
+          retention-days: 14
