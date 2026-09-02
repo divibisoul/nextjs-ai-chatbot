@@ -1,0 +1,58 @@
+name: N05 N07 Bridge CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bridge-hmac:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: FIRST EXECUTION STEP - capture runner state
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner.name=${RUNNER_NAME}"
+          echo "runner.os=${RUNNER_OS}"
+          echo "runner.arch=${RUNNER_ARCH}"
+          echo "runner.environment=${RUNNER_ENVIRONMENT}"
+          echo "github.sha=${GITHUB_SHA}"
+          echo "github.ref=${GITHUB_REF}"
+          echo "github.workflow=${GITHUB_WORKFLOW}"
+          echo "node-before=$(node --version 2>/dev/null || echo unavailable)"
+          echo "pnpm-before=$(pnpm --version 2>/dev/null || echo unavailable)"
+          uname -a
+
+      - name: Checkout N05
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck Soul Mesh
+        run: pnpm run typecheck:mesh
+
+      - name: Execute N05 N07 bridge HMAC test
+        run: pnpm exec tsx --test lib/soul-neural/N07Bridge.test.ts
+
+      - name: Execute complete Mesh bridge test set
+        run: pnpm run test:mesh
