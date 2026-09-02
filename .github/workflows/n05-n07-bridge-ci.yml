@@ -45,6 +45,14 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Verify runner toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          pnpm --version
+          test "$(pnpm --version)" = "9.12.3"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
