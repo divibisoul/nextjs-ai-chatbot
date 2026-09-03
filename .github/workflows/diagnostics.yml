@@ -18,9 +18,18 @@ jobs:
       - name: FIRST EXECUTION STEP - capture runner state
         shell: bash
         run: |
-          set -u
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/n04-first-step"
-          { date -u; uname -a || true; cat /etc/os-release || true; node --version || true; npm --version || true; df -hT || true; free -h || true; env | cut -d= -f1 | sort || true; } 2>&1 | tee "$RUNNER_TEMP/n04-first-step/runner.log"
+          {
+            date -u
+            uname -a
+            cat /etc/os-release
+            node --version
+            npm --version
+            df -hT
+            free -h
+            env | cut -d= -f1 | sort
+          } 2>&1 | tee "$RUNNER_TEMP/n04-first-step/runner.log"
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
@@ -53,5 +62,5 @@ jobs:
         with:
           name: n04-diagnostics-${{ github.run_id }}
           path: .diagnostics/
-          if-no-files-found: ignore
-          retention-days: 14
+          if-no-files-found: error
+          retention-days: 30
