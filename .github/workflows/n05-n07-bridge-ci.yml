@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   bridge-hmac:
@@ -19,16 +20,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "runner.name=${RUNNER_NAME}"
-          echo "runner.os=${RUNNER_OS}"
-          echo "runner.arch=${RUNNER_ARCH}"
-          echo "runner.environment=${RUNNER_ENVIRONMENT}"
-          echo "github.sha=${GITHUB_SHA}"
-          echo "github.ref=${GITHUB_REF}"
-          echo "github.workflow=${GITHUB_WORKFLOW}"
-          echo "node-before=$(node --version 2>/dev/null || echo unavailable)"
-          echo "pnpm-before=$(pnpm --version 2>/dev/null || echo unavailable)"
-          uname -a
+          mkdir -p .diagnostics
+          echo "runner.name=${RUNNER_NAME}" | tee .diagnostics/runner-status.txt
+          echo "runner.os=${RUNNER_OS}" | tee -a .diagnostics/runner-status.txt
+          echo "runner.arch=${RUNNER_ARCH}" | tee -a .diagnostics/runner-status.txt
+          echo "runner.environment=${RUNNER_ENVIRONMENT}" | tee -a .diagnostics/runner-status.txt
+          echo "github.sha=${GITHUB_SHA}" | tee -a .diagnostics/runner-status.txt
+          echo "github.ref=${GITHUB_REF}" | tee -a .diagnostics/runner-status.txt
+          echo "github.workflow=${GITHUB_WORKFLOW}" | tee -a .diagnostics/runner-status.txt
+          echo "node-before=$(node --version 2>/dev/null || echo unavailable)" | tee -a .diagnostics/runner-status.txt
+          echo "pnpm-before=$(pnpm --version 2>/dev/null || echo unavailable)" | tee -a .diagnostics/runner-status.txt
+          uname -a | tee -a .diagnostics/runner-status.txt
 
       - name: Checkout N05
         uses: actions/checkout@v4
@@ -45,6 +47,26 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Verify runner toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          pnpm --version
+          test "$(pnpm --version)" = "9.12.3"
+
+      - name: Verify canonical N07 bridge version
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/divibisoul/Orquestrador-/main/SOUL-BRIDGE-VERSION.md \
+            -o /tmp/SOUL-BRIDGE-VERSION.md
+          grep -Fq 'Protocol: `soul-mesh/1`' /tmp/SOUL-BRIDGE-VERSION.md
+          grep -Fq 'Contract version: `1.1.0`' /tmp/SOUL-BRIDGE-VERSION.md
+          grep -Fq 'Bridge version: `1.1.0`' /tmp/SOUL-BRIDGE-VERSION.md
+          diff -u SOUL-BRIDGE-VERSION.md /tmp/SOUL-BRIDGE-VERSION.md
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -56,3 +78,78 @@ jobs:
 
       - name: Execute complete Mesh bridge test set
         run: pnpm run test:mesh
+
+      - name: Capture failure diagnostic when runner starts
+        if: ${{ failure() }}
+        shell: bash
+        run: scripts/runner-diagnostic.sh
+
+  runner-watchdog:
+    name: Runner watchdog and one-shot recovery
+    needs: bridge-hmac
+    if: ${{ always() }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout diagnostics
+        uses: actions/checkout@v4
+
+      - name: Inspect bridge job execution state
+        id: inspect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .diagnostics
+          jobs_json="$(gh api --paginate \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100")"
+          printf '%s\n' "$jobs_json" > .diagnostics/run-jobs.json
+          job_id="$(printf '%s' "$jobs_json" | jq -r '.jobs[] | select(.name=="bridge-hmac") | .id' | head -n1)"
+          job_status="$(printf '%s' "$jobs_json" | jq -r '.jobs[] | select(.name=="bridge-hmac") | .status' | head -n1)"
+          job_conclusion="$(printf '%s' "$jobs_json" | jq -r '.jobs[] | select(.name=="bridge-hmac") | .conclusion' | head -n1)"
+          step_count="$(printf '%s' "$jobs_json" | jq -r '[.jobs[] | select(.name=="bridge-hmac") | .steps // []] | flatten | length')"
+          jq -n \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg run "$GITHUB_RUN_ID" \
+            --arg job "$job_id" \
+            --arg status "$job_status" \
+            --arg conclusion "$job_conclusion" \
+            --arg steps "$step_count" \
+            '{timestamp:$timestamp,repository:$repo,run_id:$run,job_id:$job,status:$status,conclusion:$conclusion,step_count:($steps|tonumber),diagnosis:(if $steps=="0" then "no provisioned workflow steps observed" else "workflow steps were provisioned" end)}' \
+            > .diagnostics/runner-failure.json
+          cat .diagnostics/runner-failure.json
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          echo "conclusion=$job_conclusion" >> "$GITHUB_OUTPUT"
+          echo "step_count=$step_count" >> "$GITHUB_OUTPUT"
+
+      - name: One-shot rerun when no runner steps were provisioned
+        if: ${{ steps.inspect.outputs.conclusion == 'failure' && steps.inspect.outputs.step_count == '0' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          job_id="${{ steps.inspect.outputs.job_id }}"
+          test -n "$job_id"
+          gh api --method POST \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/${GITHUB_REPOSITORY}/actions/jobs/${job_id}/rerun"
+          echo "RECOVERY_REQUESTED: rerun requested for bridge job ${job_id}"
+
+      - name: Upload runner diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: n05-runner-diagnostics-${{ github.run_id }}
+          path: .diagnostics/
+          if-no-files-found: error
+
+      - name: Fail watchdog when bridge failed with provisioned steps
+        if: ${{ steps.inspect.outputs.conclusion == 'failure' && steps.inspect.outputs.step_count != '0' }}
+        shell: bash
+        run: |
+          echo 'BRIDGE_FAILURE: the N05 bridge job provisioned steps and failed; inspect the bridge test output.'
+          exit 1
