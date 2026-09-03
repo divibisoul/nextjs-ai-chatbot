@@ -9,9 +9,19 @@ permissions:
 
 jobs:
   dependency-review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
     steps:
-      - name: Dependency review
-        uses: actions/dependency-review-action@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          fail-on-severity: high
+          version: 9.12.3
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependency graph
+        run: pnpm install --frozen-lockfile
+      - name: Audit high severity dependencies
+        run: pnpm audit --audit-level high
