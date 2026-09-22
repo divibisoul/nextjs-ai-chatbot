@@ -49,13 +49,14 @@ export function getStreamContext() {
       globalStreamContext = createResumableStreamContext({
         waitUntil: after,
       });
-    } catch (error: any) {
-      if (error.message.includes('REDIS_URL')) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('REDIS_URL')) {
         console.log(
           ' > Resumable streams are disabled due to missing REDIS_URL',
         );
       } else {
-        console.error(error);
+        console.error(errorMessage);
       }
     }
   }
@@ -249,6 +250,8 @@ export async function POST(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    console.error('[N05 chat] unhandled request failure:', error);
+    return new ChatSDKError('bad_request:api').toResponse();
   }
 }
 
