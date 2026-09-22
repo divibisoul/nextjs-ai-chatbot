@@ -87,3 +87,32 @@ export async function saraCycle(input: string, cycleId?: string): Promise<{
     clearTimeout(timer);
   }
 }
+
+
+export async function saraTrace(cycleId: string): Promise<unknown> {
+  if (!saraConfigured()) throw new Error('SARA_NOT_CONFIGURED');
+  const id = cycleId.trim();
+  if (!id) throw new Error('SARA_CYCLE_ID_REQUIRED');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(
+      BASE_URL() + '/v1/trace/' + encodeURIComponent(id),
+      {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer ' + TOKEN(),
+          accept: 'application/json',
+          'X-Correlation-ID': id,
+        },
+        signal: controller.signal,
+        cache: 'no-store',
+      },
+    );
+    const payload: unknown = await response.json().catch(() => null);
+    if (!response.ok) throw new Error('SARA_TRACE_HTTP_' + response.status);
+    return payload;
+  } finally {
+    clearTimeout(timer);
+  }
+}
