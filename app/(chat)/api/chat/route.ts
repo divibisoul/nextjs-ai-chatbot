@@ -37,6 +37,7 @@ import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
+import { extractMessageText, saraChatEnabled, saraConfigured, saraCycle } from '@/lib/sara/SARAClient';
 
 export const maxDuration = 60;
 
@@ -149,11 +150,37 @@ export async function POST(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
+    let saraContext: string | null = null;
+    const saraInput = extractMessageText(message);
+    if (saraChatEnabled() && saraConfigured() && saraInput) {
+      try {
+        const saraResult = await saraCycle(saraInput, id + ':sara');
+        saraContext = JSON.stringify({
+          cycle_id: saraResult.cycle_id,
+          converged: saraResult.converged,
+          rollback_performed: saraResult.rollback_performed,
+          final_state: saraResult.final_state,
+          execution_report: saraResult.execution_report,
+          trace_hash: saraResult.trace_hash,
+        });
+      } catch (error) {
+        console.error(
+          '[SARA] regenerative context unavailable:',
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    }
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: [
+            systemPrompt({ selectedChatModel, requestHints }),
+            saraContext
+              ? 'Regenerative context from SARA (authoritative for audit/evidence, not a replacement for the model): ' + saraContext
+              : '',
+          ].filter(Boolean).join('\n\n'),
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
