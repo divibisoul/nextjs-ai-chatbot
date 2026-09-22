@@ -175,6 +175,13 @@ export async function saraAudit(input: string, correlationId?: string): Promise<
   return saraAuxRequest('/v1/audit', { method: 'POST', body: { input }, correlationId });
 }
 
+export async function saraClareiraAudit(correlationId?: string): Promise<Record<string, unknown>> {
+  return (await saraRequest('/v1/clareira/audit', {
+    method: 'GET',
+    correlationId,
+  })) as Record<string, unknown>;
+}
+
 export async function saraRegenerate(input: string, correlationId?: string): Promise<Record<string, unknown>> {
   if (!input.trim()) throw new Error('SARA_INPUT_REQUIRED');
   return saraAuxRequest('/v1/regenerate', { method: 'POST', body: { input }, correlationId });
