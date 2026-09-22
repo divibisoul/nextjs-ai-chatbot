@@ -176,10 +176,10 @@ export async function saraAudit(input: string, correlationId?: string): Promise<
 }
 
 export async function saraClareiraAudit(correlationId?: string): Promise<Record<string, unknown>> {
-  return (await saraRequest('/v1/clareira/audit', {
+  return saraAuxRequest('/v1/clareira/audit', {
     method: 'GET',
     correlationId,
-  })) as Record<string, unknown>;
+  });
 }
 
 export async function saraRegenerate(input: string, correlationId?: string): Promise<Record<string, unknown>> {
