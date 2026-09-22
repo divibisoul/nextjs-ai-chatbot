@@ -1,9 +1,9 @@
 # N05 ↔ SARA
 
-N05 has a server-side SARA client. When SARA_ENABLE_CHAT=true and credentials are configured, each non-empty textual user message is sent to SARA before the model prompt is built.
+N05 possui cliente SARA server-side. Quando SARA_ENABLE_CHAT=true e as credenciais estão configuradas, cada mensagem textual não vazia pode ser submetida ao ciclo SARA antes da construção do prompt do modelo.
 
-Environment: SARA_ENABLE_CHAT, SARA_BASE_URL, SARA_API_TOKEN.
+Ambiente: SARA_ENABLE_CHAT, SARA_BASE_URL, SARA_API_TOKEN.
 
-The returned cycle_id, state, convergence, rollback state, execution evidence and trace hash are appended as context. The original N05 chat/tool/streaming path remains intact.
+Além de `sara.cycle` e `sara.trace`, o cliente agora expõe, de forma aditiva, `sara.health`, `sara.capabilities`, `sara.state`, `sara.audit` e `sara.regenerate`. Assim, o núcleo conversacional pode consumir auditoria, regeneração, estado, descoberta de capacidades e rastreabilidade sem duplicar ARA/ETR/ITR.
 
-If SARA is unavailable, the failure is recorded and the native N05 flow remains available; the integration never fabricates a SARA result.
+O fluxo original de chat, ferramentas e streaming permanece intacto. Se o SARA estiver indisponível, a falha é registrada e o fluxo nativo do N05 continua disponível; nenhum resultado do SARA é fabricado.
