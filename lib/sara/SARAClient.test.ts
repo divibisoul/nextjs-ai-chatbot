@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { saraHealth, saraCapabilities, saraState, saraAudit, saraRegenerate } from './SARAClient';
+import { saraHealth, saraCapabilities, saraState, saraAudit, saraRegenerate, saraClareiraAudit } from './SARAClient';
 
 test('N05 exposes additive SARA operations beyond chat cycle', async () => {
   const originalFetch = globalThis.fetch;
@@ -46,6 +46,11 @@ test('N05 exposes additive SARA operations beyond chat cycle', async () => {
     await saraRegenerate('regenerar contexto', 'n05-regenerate-001');
     assert.equal(observed?.path, '/v1/regenerate');
     assert.equal(observed?.correlation, 'n05-regenerate-001');
+
+    await saraClareiraAudit('n05-clareira-audit-001');
+    assert.equal(observed?.path, '/v1/clareira/audit');
+    assert.equal(observed?.method, 'GET');
+    assert.equal(observed?.correlation, 'n05-clareira-audit-001');
   } finally {
     globalThis.fetch = originalFetch;
     if (oldUrl === undefined) delete process.env.SARA_BASE_URL;
