@@ -16,7 +16,7 @@ const nonces=new Map<string,number>();
 const RATE_LIMIT=100, WINDOW_MS=60000;
 const OCTACORE_CAPABILITY='octacore.execute';
 const N05_MESH_CAPABILITIES=[...SOUL_MESH_CAPABILITIES, {id:OCTACORE_CAPABILITY,version:SOUL_MESH_CONTRACT_VERSION,description:'Octacore execution wrapper over canonical N05 gateway',request:true,response:true,events:false,owner:'N05',execution:'wrapper'}];
-void registerN05().catch(()=>undefined);
+if (process.env.NODE_ENV !== 'test') void registerN05().catch(()=>undefined);
 function authorized(request:Request){const token=process.env.SOUL_MESH_TOKEN;if(!token)return process.env.NODE_ENV!=='production';return request.headers.get('authorization')===`Bearer ${token}`}
 function rateAllowed(peer:string){const now=Date.now(),recent=(peerBuckets.get(peer)??[]).filter(t=>now-t<WINDOW_MS);if(recent.length>=RATE_LIMIT){peerBuckets.set(peer,recent);return false}recent.push(now);peerBuckets.set(peer,recent);return true}
 function signatureValid(body:string,request:Request,message:SoulMeshMessage){const hmacSecret=process.env.SOUL_MESH_HMAC_SECRET?.trim();const nonce=request.headers.get('x-soul-mesh-nonce')??'';const hmac=request.headers.get('x-soul-mesh-hmac')??'';if(hmacSecret&&nonce&&hmac)return verifySoulMeshMessage(message,hmacSecret,nonce,hmac);const secret=process.env.SOUL_MESH_SIGNING_SECRET;if(!secret)return process.env.NODE_ENV!=='production';const provided=request.headers.get('x-soul-signature');if(!provided)return false;const expected=createHmac('sha256',secret).update(body).digest('hex');const a=Buffer.from(provided),b=Buffer.from(expected);return a.length===b.length&&timingSafeEqual(a,b)}
