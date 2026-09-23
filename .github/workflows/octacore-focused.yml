@@ -36,4 +36,4 @@ jobs:
         continue-on-error: true
         run: npx tsc --noEmit
       - name: Octacore handler tests
-        run: npx tsx app/api/soul-mesh/octacore.test.ts
+        run: NODE_ENV=test npx tsx app/api/soul-mesh/octacore.test.ts
