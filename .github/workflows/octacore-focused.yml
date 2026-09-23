@@ -28,7 +28,10 @@ jobs:
         with:
           node-version: '22.x'
       - name: Install dependencies
-        run: npm install --legacy-peer-deps --no-audit --no-fund
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.12.3 --activate
+          pnpm install --frozen-lockfile
       - name: Baseline TypeScript diagnostic
         continue-on-error: true
         run: npx tsc --noEmit
