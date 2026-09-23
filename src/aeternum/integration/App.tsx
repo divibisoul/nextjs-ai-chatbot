@@ -1,9 +1,17 @@
 import React from "react";
-import { appOrchestrator } from "../../../aeternum-core-29/lib/aeternum/orchestration/AppOrchestrator";
 
-export interface AeternumAppIntegrationProps { children: React.ReactNode; }
+export interface AeternumAppIntegrationProps {
+  children: React.ReactNode;
+  boot?: () => void | Promise<void>;
+}
 
-export const AeternumAppIntegration: React.FC<AeternumAppIntegrationProps> = ({ children }) => {
-  React.useEffect(() => { appOrchestrator.boot(); }, []);
+/**
+ * Additive integration boundary. It does not replace the host App.tsx and
+ * does not assume a cross-repository import path.
+ */
+export const AeternumAppIntegration: React.FC<AeternumAppIntegrationProps> = ({ children, boot }) => {
+  React.useEffect(() => {
+    if (boot) void Promise.resolve(boot());
+  }, [boot]);
   return <>{children}</>;
 };
