@@ -1,0 +1,39 @@
+name: Octacore G5 Focused Gate
+
+on:
+  push:
+    branches:
+      - feat/octacore-g5-r1
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'package-lock.json'
+      - '.github/workflows/octacore-focused.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+      - name: Install dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.12.3 --activate
+          pnpm install --frozen-lockfile
+      - name: Baseline TypeScript diagnostic
+        continue-on-error: true
+        run: npx tsc --noEmit
+      - name: Octacore handler tests
+        run: NODE_ENV=test npx tsx app/api/soul-mesh/octacore.test.ts
