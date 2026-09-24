@@ -1,10 +1,10 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import type { SoulMeshMessage } from './SoulMeshProtocol';
 import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
+import { N05_PEERS, type N05Peer } from './N05ChannelMatrix';
 
 export const NUCLEUS_ID = 'N05' as const;
-export const PEERS = ['N01', 'N02', 'N03', 'N04', 'N06'] as const;
-export type N05Peer = (typeof PEERS)[number];
+export const PEERS = N05_PEERS;
 
 const urls: Record<N05Peer, string | undefined> = {
   N01: process.env.SOUL_MESH_N01_URL,
@@ -12,6 +12,7 @@ const urls: Record<N05Peer, string | undefined> = {
   N03: process.env.SOUL_MESH_N03_URL,
   N04: process.env.SOUL_MESH_N04_URL,
   N06: process.env.SOUL_MESH_N06_URL,
+  N07: process.env.SOUL_MESH_N07_URL,
 };
 
 function nonce(): string { return randomUUID().replaceAll('-', '').padEnd(32, '0').slice(0, 32); }
@@ -75,7 +76,7 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
         headers['x-soul-mesh-nonce'] = nonceValue;
         headers['x-soul-mesh-hmac'] = hmac(message, nonceValue, secret);
       } else if (token) {
-        headers.authorization = `Bearer ${token}`;
+        headers.authorization = 'Bearer ' + token;
       }
       const response = await fetch(`${url.replace(/\/$/, '')}/api/soul-mesh`, {
         method: 'POST', headers, body: JSON.stringify(message), signal: controller.signal, cache: 'no-store',
@@ -102,5 +103,5 @@ export async function describePeer(target: N05Peer, timeoutMs?: number) {
   return sendTo(target, 'mesh.describe', {}, timeoutMs);
 }
 
-export const N05_OUT_CHANNELS = PEERS.map(peer => `N05.OUT.${peer}`);
-export const N05_IN_CHANNELS = PEERS.map(peer => `N05.IN.${peer}`);
+export const N05_OUT_CHANNELS = [...N05_PEERS].map(peer => `N05.OUT.${peer}`);
+export const N05_IN_CHANNELS = [...N05_PEERS].map(peer => `N05.IN.${peer}`);
