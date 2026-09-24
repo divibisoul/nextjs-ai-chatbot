@@ -1,1 +1,67 @@
-{"system":"SOUL","version":"1.2","nucleus":"N05","fusionMode":"federated-independent-runtimes","reference":"N01","peers":["N01","N02","N03","N04","N06"],"directions":["IN","OUT"],"transports":["IN_PROCESS","WEBVIEW_BRIDGE","LOOPBACK_HTTP","HTTP","REALTIME"],"requiredStages":["identity","discovery","secure-transport","capability-ownership","bidirectional-routing","delegation","response-correlation","health-and-recovery","observability","native-capability-preservation"],"rules":{"nativeRuntime":true,"nativeCapabilities":true,"nativeAgents":true,"nativeTools":true,"independentDeployment":true,"remoteExecutionRequiresCorrelation":true,"unknownCapabilityMustFailClosed":true,"peerFailureMustNotDisableLocalRuntime":true},"channels":{"in":["N05.IN.N01","N05.IN.N02","N05.IN.N03","N05.IN.N04","N05.IN.N06"],"out":["N05.OUT.N01","N05.OUT.N02","N05.OUT.N03","N05.OUT.N04","N05.OUT.N06"]},"completion":"architecture-contract-complete; runtime-E2E-requires-all-six-services-available"}
+{
+  "system": "SOUL",
+  "version": "1.2",
+  "nucleus": "N05",
+  "fusionMode": "federated-independent-runtimes",
+  "reference": "N01",
+  "peers": [
+    "N01",
+    "N02",
+    "N03",
+    "N04",
+    "N06",
+    "N07"
+  ],
+  "directions": [
+    "IN",
+    "OUT"
+  ],
+  "transports": [
+    "IN_PROCESS",
+    "WEBVIEW_BRIDGE",
+    "LOOPBACK_HTTP",
+    "HTTP",
+    "REALTIME"
+  ],
+  "requiredStages": [
+    "identity",
+    "discovery",
+    "secure-transport",
+    "capability-ownership",
+    "bidirectional-routing",
+    "delegation",
+    "response-correlation",
+    "health-and-recovery",
+    "observability",
+    "native-capability-preservation"
+  ],
+  "rules": {
+    "nativeRuntime": true,
+    "nativeCapabilities": true,
+    "nativeAgents": true,
+    "nativeTools": true,
+    "independentDeployment": true,
+    "remoteExecutionRequiresCorrelation": true,
+    "unknownCapabilityMustFailClosed": true,
+    "peerFailureMustNotDisableLocalRuntime": true
+  },
+  "channels": {
+    "in": [
+      "N05.IN.N01",
+      "N05.IN.N02",
+      "N05.IN.N03",
+      "N05.IN.N04",
+      "N05.IN.N06",
+      "N05.IN.N07"
+    ],
+    "out": [
+      "N05.OUT.N01",
+      "N05.OUT.N02",
+      "N05.OUT.N03",
+      "N05.OUT.N04",
+      "N05.OUT.N06",
+      "N05.OUT.N07"
+    ]
+  },
+  "completion": "architecture-contract-complete; runtime-E2E-requires-all-seven-nuclei plus SARA where governance routes are used"
+}

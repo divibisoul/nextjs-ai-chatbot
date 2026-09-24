@@ -24,6 +24,6 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
   },
 
   /*
-   * TODO: For users with an account and a paid membership
+   * Paid membership is not part of the current UserType contract. Adding it requires an explicit product policy for user type, limits, and model access.
    */
 };
