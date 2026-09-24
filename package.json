@@ -20,7 +20,7 @@
     "test:mesh": "pnpm exec tsx --test lib/soul-mesh/Nucleus05Runtime.test.ts lib/soul-mesh/SoulMeshTransportMultiplexer.test.ts src/mesh/N05MeshGateway.test.ts lib/soul-neural/N07Bridge.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:mesh": "tsc -p tsconfig.mesh.json --noEmit",
-    "test:sara": "tsx --test lib/sara/SARAClient.test.ts"
+    "test:sara": "tsx --test lib/sara/SARAClient.test.ts lib/sara/SARAContextPropagation.test.ts"
   },
   "dependencies": {
     "@ai-sdk/provider": "2.0.0-beta.1",

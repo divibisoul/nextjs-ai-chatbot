@@ -155,7 +155,10 @@ export async function POST(request: Request) {
     const saraInput = extractMessageText(message);
     if (saraChatEnabled() && saraConfigured() && saraInput) {
       try {
-        const saraResult = await saraCycle(saraInput, id + ':sara');
+        const saraResult = await saraCycle(saraInput, id + ':sara', {
+          session_id: id,
+          client: 'n05',
+        });
         saraContext = JSON.stringify({
           cycle_id: saraResult.cycle_id,
           converged: saraResult.converged,
