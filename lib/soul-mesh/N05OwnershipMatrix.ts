@@ -7,8 +7,8 @@ export interface N05OwnershipRule {
 }
 
 export const N05_OWNERSHIP_MATRIX: Record<string, N05OwnershipRule> = {
-  'inference.*': { owner: 'N05', consumers: ['N01', 'N02', 'N03', 'N04', 'N06'], fallback: ['N02'] },
-  'conversation.*': { owner: 'N05', consumers: ['N01', 'N02', 'N03', 'N04', 'N06'], fallback: ['N02'] },
+  'inference.*': { owner: 'N05', consumers: ['N01', 'N02', 'N03', 'N04', 'N06', 'N07'], fallback: ['N02'] },
+  'conversation.*': { owner: 'N05', consumers: ['N01', 'N02', 'N03', 'N04', 'N06', 'N07'], fallback: ['N02'] },
   'document.*': { owner: 'N04', consumers: ['N01', 'N02', 'N03', 'N05', 'N06'], fallback: ['N06'] },
   'audio.*': { owner: 'N03', consumers: ['N01', 'N02', 'N04', 'N05', 'N06'], fallback: ['N01'] },
   'tool.*': { owner: 'N04', consumers: ['N01', 'N02', 'N03', 'N05', 'N06'], fallback: ['N06'] },
