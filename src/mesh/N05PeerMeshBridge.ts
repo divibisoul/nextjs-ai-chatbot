@@ -2,10 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { createSoulMeshNonce, signSoulMeshMessage } from '@/lib/soul-mesh/SoulMeshHmac';
 import { N05AdaptiveTransportRouter } from './N05AdaptiveTransportRouter';
 
-type NucleusId = 'N01' | 'N02' | 'N03' | 'N04' | 'N06';
+type NucleusId = 'N01' | 'N02' | 'N03' | 'N04' | 'N06' | 'N07';
 type PeerState = { url: string; healthy: boolean; failures: number; latencyMs: number | null; openedUntil: number };
 export type N05MeshEnvelope = { protocol:'soul-mesh/1'; id:string; correlationId:string; traceId:string; source:'N05'; target:NucleusId; kind:'request'; capability:string; payload:unknown; timestamp:number; nonce:string; transport:'http'; meta:{runtime:'n05-peer-bridge';transport:'http-json';nonce:string;traceId:string} };
-const PEERS: readonly NucleusId[] = ['N01','N02','N03','N04','N06'];
+const PEERS: readonly NucleusId[] = ['N01','N02','N03','N04','N06','N07'];
 const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 const envKey=(p:NucleusId)=>`SOUL_MESH_${p}_URL`;
 const normalize=(u:string)=>u.replace(/\/+$/,'');
