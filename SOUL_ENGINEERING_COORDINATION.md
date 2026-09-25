@@ -22,7 +22,7 @@ A nucleus is not complete because code exists or ping/health succeeds. Structura
 
 No previous directive is cancelled. Use DETECT → DIAGNOSE → RESEARCH → CORRECT → COMPLETE → CONNECT → CROSS → FUSE → OPTIMIZE → VALIDATE → DOCUMENT → RE-AUDIT. Every actionable failure becomes an engineering task. Search authoritative documentation and viable alternatives when blocked; never turn a first failure into a permanent limitation.
 
-Treat every nucleus as an independent AI with identity, agents, capabilities, functions, tools, providers, context, memory, execution, inputs, outputs, discovery, delegation, response and observability. Six nuclei mean 15 bidirectional pairs / 30 directed logical links and five IN/five OUT peer relationships per nucleus.
+Treat every nucleus as an independent AI with identity, agents, capabilities, functions, tools, providers, context, memory, execution, inputs, outputs, discovery, delegation, response and observability. Seven nuclei mean 21 bidirectional pairs / 42 directed logical links and six IN/six OUT peer relationships per nucleus.
 
 Soul Mesh is the single interoperability layer: discovery → capability discovery → route → delegate → execute → respond → correlate → compose. Use adapters for HTTP/REST, WebSocket/realtime, events/PubSub, loopback or internal transport when justified, without creating a second Mesh.
 
@@ -32,4 +32,4 @@ Enable temporary agent federation (Planner, Researcher, Analyzer, Executor, Vali
 
 SOUL Super GPU / SuperCompute is logical distributed parallel processing: TASK → DECOMPOSITION → SCHEDULER → CAPABILITY ROUTER → PARALLEL EXECUTION → RESULT AGGREGATION → VALIDATION → FINAL RESULT. Combine inter-nucleus and intra-nucleus workers when independent. N05 contributes its real capabilities/tools/providers to this fabric rather than only advertising endpoints.
 
-Graphs for coverage, health, execution evidence and latency are decision aids, never test substitutes. Final reports must state actual HEAD, CI evidence, changed files, elapsed time, blockers and unverified commissioning areas. N07 remains the final untouched implementation target until preceding fronts and N01↔N06 are stabilized.
+Graphs for coverage, health, execution evidence and latency are decision aids, never test substitutes. Final reports must state actual HEAD, CI evidence, changed files, elapsed time, blockers and unverified commissioning areas. N07 remains the final commissioning target until the preceding fronts and N01↔N06 integration are stabilized.
