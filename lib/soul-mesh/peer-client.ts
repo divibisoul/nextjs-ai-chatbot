@@ -3,7 +3,7 @@ import type { SoulMeshMessage } from './SoulMeshProtocol';
 import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
 
 export const NUCLEUS_ID = 'N05' as const;
-export const PEERS = ['N01', 'N02', 'N03', 'N04', 'N06'] as const;
+export const PEERS = ['N01', 'N02', 'N03', 'N04', 'N06', 'N07'] as const;
 export type N05Peer = (typeof PEERS)[number];
 
 const urls: Record<N05Peer, string | undefined> = {
@@ -12,6 +12,7 @@ const urls: Record<N05Peer, string | undefined> = {
   N03: process.env.SOUL_MESH_N03_URL,
   N04: process.env.SOUL_MESH_N04_URL,
   N06: process.env.SOUL_MESH_N06_URL,
+  N07: process.env.SOUL_MESH_N07_URL,
 };
 
 function nonce(): string { return randomUUID().replaceAll('-', '').padEnd(32, '0').slice(0, 32); }
