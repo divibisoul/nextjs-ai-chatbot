@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   bridge-hmac:
@@ -45,6 +45,17 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Repair dependency lockfile
+        run: pnpm install --lockfile-only --no-frozen-lockfile --ignore-scripts
+      - name: Persist dependency lockfile
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json pnpm-lock.yaml
+          git commit -m 'fix: synchronize N05 dependency lockfile'
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
