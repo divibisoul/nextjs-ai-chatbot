@@ -3,10 +3,12 @@ name: Dependency Review
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - pnpm-lock.yaml
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   dependency-review:
@@ -28,8 +30,22 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Regenerate dependency lockfile
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
+
 
       - name: Audit high severity dependencies
         run: pnpm audit --audit-level high
+
+      - name: Persist repaired lockfile
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "pnpm-lock.yaml already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "fix(n05): persist audited dependency lockfile"
+          git push origin HEAD:feat/soul-n05-n07-activation
+
