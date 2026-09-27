@@ -40,6 +40,49 @@ export function verifySoulMeshMessage(message: SoulMeshMessage, secret: string, 
 }
 
 
+export function signSoulMeshResponse(
+  request: SoulMeshMessage,
+  payload: unknown,
+  kind: 'response' | 'error',
+  secret: string,
+): { message: SoulMeshMessage; nonce: string; hmac: string } {
+  if (!secret) throw new Error('SOUL_MESH_HMAC_SECRET_MISSING');
+  const message: SoulMeshMessage = {
+    protocol: 'soul-mesh/1',
+    contractVersion: '1.1.0',
+    id: randomBytes(16).toString('hex'),
+    correlationId: request.correlationId,
+    source: request.target,
+    target: request.source,
+    kind,
+    capability: request.capability,
+    payload,
+    timestamp: Date.now(),
+    meta: {
+      runtime: 'nextjs-ai-chatbot',
+      transport: 'HTTP',
+      encoding: 'json',
+      version: request.contractVersion,
+      traceId: request.meta?.traceId ?? request.correlationId,
+    },
+  };
+  const nonce = createSoulMeshNonce();
+  const canonical = JSON.stringify({
+    version: '1.0',
+    contractVersion: message.contractVersion,
+    messageId: message.id,
+    source: message.source,
+    target: message.target,
+    timestamp: message.timestamp,
+    nonce,
+    correlationId: message.correlationId,
+    type: kind === 'error' ? 'ERROR' : 'TASK_RESULT',
+    payload: { capability: message.capability ?? '', payload: message.payload ?? {} },
+  });
+  const hmac = digest(canonical, secret);
+  return { message, nonce, hmac };
+}
+
 export function verifySoulMeshResponse(
   request: SoulMeshMessage,
   response: SoulMeshMessage & { nonce?: string; hmac?: string },
