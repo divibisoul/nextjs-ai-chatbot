@@ -122,7 +122,19 @@
       "sharp": "0.35.4",
       "js-yaml": "4.3.2",
       "brace-expansion": "1.1.18",
-      "nanoid@3.3.9": "3.3.19"
+      "nanoid@3.3.9": "3.3.19",
+      "postcss": "8.5.28",
+      "playwright": "1.63.0",
+      "glob": "10.5.0",
+      "minimatch@3.1.2": "3.1.4",
+      "minimatch@9.0.5": "9.0.7",
+      "flatted": "3.4.2",
+      "undici": "6.27.0",
+      "picomatch@2.3.1": "2.3.2",
+      "picomatch@4.0.2": "4.0.4",
+      "drizzle-orm": "0.45.2",
+      "linkify-it": "5.0.2",
+      "ws": "8.21.0"
     }
   }
 }
