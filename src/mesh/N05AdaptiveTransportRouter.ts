@@ -24,8 +24,10 @@ export class N05AdaptiveTransportRouter{
   const unique=[...new Set(ordered)];
   let last:unknown;
   for(const name of unique){
-   const handler=this.handlers.get(name)!;
-   const state=this.stats.get(name)!;state.attempts++;
+   const handler=this.handlers.get(name);
+   const state=this.stats.get(name);
+   if(!handler || !state) { last=new Error(`N05_TRANSPORT_STATE_MISSING:${name}`); continue; }
+   state.attempts++;
    const started=Date.now();
    try{const result=await handler(peer,request,signal);const latency=Date.now()-started;state.successes++;state.latencyMs=state.latencyMs===null?latency:(state.latencyMs*0.8)+(latency*0.2);state.healthScore=Math.min(1,(state.healthScore*0.8)+0.2);return{name,result,latencyMs:latency};}
    catch(error){last=error;state.failures++;state.healthScore=Math.max(0,state.healthScore*0.8);}
@@ -33,6 +35,6 @@ export class N05AdaptiveTransportRouter{
   throw last instanceof Error?last:new Error('N05_ALL_TRANSPORTS_FAILED');
  }
 
- private score(name:N05TransportName){const state=this.stats.get(name)!;const latencyScore=state.latencyMs===null?0.5:1/(1+state.latencyMs/1000);const reliability=state.attempts?state.successes/state.attempts:1;return state.healthScore*0.5+reliability*0.35+latencyScore*0.15;}
+ private score(name:N05TransportName){const state=this.stats.get(name);if(!state)return 0;const latencyScore=state.latencyMs===null?0.5:1/(1+state.latencyMs/1000);const reliability=state.attempts?state.successes/state.attempts:1;return state.healthScore*0.5+reliability*0.35+latencyScore*0.15;}
  snapshot(){return Object.fromEntries([...this.stats.entries()].map(([name,state])=>[name,{...state,score:this.score(name)}]));}
 }
