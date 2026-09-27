@@ -25,6 +25,11 @@ export function createSoulMeshNonce(): string {
   return randomBytes(24).toString('base64url');
 }
 
+function digest(value: string, secret: string): string {
+  if (!secret || secret.length < 16) throw new Error('SOUL_MESH_HMAC_SECRET_INVALID');
+  return createHmac('sha256', secret).update(value, 'utf8').digest('hex');
+}
+
 export function signSoulMeshMessage(message: SoulMeshMessage, secret: string, nonce: string): string {
   if (!secret) throw new Error('SOUL_MESH_HMAC_SECRET_MISSING');
   return createHmac('sha256', secret).update(canonicalize(message, nonce), 'utf8').digest('hex');
