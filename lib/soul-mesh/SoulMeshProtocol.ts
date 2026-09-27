@@ -14,6 +14,8 @@ export interface SoulMeshMessage<T = unknown> {
   capability?: string;
   payload: T;
   timestamp: number;
+  nonce?: string;
+  hmac?: string;
   meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string; traceId?: string };
 }
 

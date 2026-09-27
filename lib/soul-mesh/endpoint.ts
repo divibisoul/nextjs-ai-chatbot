@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { executeSoulInference, soulInferenceCapabilities } from './SoulMeshAI';
+import { signSoulMeshResponse } from './SoulMeshHmac';
 import { SOUL_MESH_CAPABILITIES } from './SoulMeshCapabilities';
 import { createNucleus05Runtime, type N05CapabilityHandler } from './Nucleus05Runtime';
 import { createN05CapabilityGateway } from '../../src/mesh/N05Capabilities';
@@ -9,7 +10,7 @@ export const SOUL_MESH_PROTOCOL = 'soul-mesh/1' as const;
 export const SOUL_MESH_CONTRACT_VERSION = '1.1.0' as const;
 export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06'|'N07';
 export type NucleusId = SoulNucleus;
-export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; contractVersion: typeof SOUL_MESH_CONTRACT_VERSION; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string; traceId?: string } };
+export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; contractVersion: typeof SOUL_MESH_CONTRACT_VERSION; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; nonce?: string; hmac?: string; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string; traceId?: string } };
 const nuclei = new Set<SoulNucleus>(['N01','N02','N03','N04','N05','N06','N07']);
 const capabilityGateway = createN05CapabilityGateway();
 
@@ -28,7 +29,12 @@ export function validateMeshMessage(m: SoulMeshMessage) {
 }
 
 function result(message: SoulMeshMessage, payload: unknown, kind: SoulMeshMessage['kind'] = 'response'): SoulMeshMessage {
-  return { protocol: SOUL_MESH_PROTOCOL, contractVersion: SOUL_MESH_CONTRACT_VERSION, id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind, capability: message.capability, payload, timestamp: Date.now(), meta: { runtime: 'nextjs-ai-chatbot', transport: 'HTTP', encoding: 'json', version: SOUL_MESH_CONTRACT_VERSION, nonce: crypto.randomUUID(), traceId: message.meta?.traceId ?? message.correlationId } };
+  const secret = process.env.SOUL_MESH_HMAC_SECRET?.trim();
+  if (secret && (kind === 'response' || kind === 'error')) {
+    const signed = signSoulMeshResponse(message, payload, kind, secret);
+    return { ...signed.message, nonce: signed.nonce, hmac: signed.hmac } as SoulMeshMessage;
+  }
+  return { protocol: SOUL_MESH_PROTOCOL, contractVersion: SOUL_MESH_CONTRACT_VERSION, id: crypto.randomUUID(), correlationId: message.correlationId, source: NUCLEUS_ID, target: message.source, kind, capability: message.capability, payload, timestamp: Date.now(), meta: { runtime: 'nextjs-ai-chatbot', transport: 'HTTP', encoding: 'json', version: SOUL_MESH_CONTRACT_VERSION, traceId: message.meta?.traceId ?? message.correlationId } };
 }
 
 export function createNucleus05MeshHandlers(extra: Record<string, N05CapabilityHandler> = {}) {
