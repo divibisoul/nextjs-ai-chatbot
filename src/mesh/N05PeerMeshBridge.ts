@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { createSoulMeshNonce, signSoulMeshMessage } from '@/lib/soul-mesh/SoulMeshHmac';
+import { createSoulMeshNonce, signSoulMeshMessage, verifySoulMeshResponse } from '@/lib/soul-mesh/SoulMeshHmac';
 import { N05AdaptiveTransportRouter } from './N05AdaptiveTransportRouter';
 
 type NucleusId = 'N01' | 'N02' | 'N03' | 'N04' | 'N06' | 'N07';
 type PeerState = { url: string; healthy: boolean; failures: number; latencyMs: number | null; openedUntil: number };
-export type N05MeshEnvelope = { protocol:'soul-mesh/1'; id:string; correlationId:string; traceId:string; source:'N05'; target:NucleusId; kind:'request'; capability:string; payload:unknown; timestamp:number; nonce:string; transport:'http'; meta:{runtime:'n05-peer-bridge';transport:'http-json';nonce:string;traceId:string} };
+export type N05MeshEnvelope = { protocol:'soul-mesh/1'; contractVersion:'1.1.0'; id:string; correlationId:string; traceId:string; source:'N05'; target:NucleusId; kind:'request'; capability:string; payload:unknown; timestamp:number; nonce:string; transport:'http'; meta:{runtime:'n05-peer-bridge';transport:'http-json';nonce:string;traceId:string} };
 const PEERS: readonly NucleusId[] = ['N01','N02','N03','N04','N06','N07'];
 const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 const envKey=(p:NucleusId)=>`SOUL_MESH_${p}_URL`;
@@ -26,9 +26,16 @@ export class N05PeerMeshBridge {
    const hmac=hmacSecret?signSoulMeshMessage(envelope as never,hmacSecret,envelope.nonce):undefined;
    const headers:Record<string,string>={'content-type':'application/json',accept:'application/json','x-soul-nucleus':'N05','x-soul-target':envelope.target,'x-correlation-id':envelope.correlationId,'x-soul-trace-id':envelope.traceId,traceparent:`00-${envelope.traceId.replaceAll('-','').slice(0,32).padEnd(32,'0')}-${envelope.id.replaceAll('-','').slice(0,16).padEnd(16,'0')}-01`};
    if(hmacSecret&&hmac){headers['x-soul-mesh-nonce']=envelope.nonce;headers['x-soul-mesh-hmac']=hmac;}
-   const response=await fetch(`${state.url}${state.url.endsWith('/mesh/in')?'':'/mesh/in'}`,{method:'POST',headers,body:JSON.stringify(envelope),cache:'no-store',signal});
+   const base=state.url.replace(/\/+$/,'').replace(/\/mesh\/in$/,'');
+   const endpoint=base.endsWith('/api/soul-mesh')?base:`${base}/api/soul-mesh`;
+   const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(envelope),cache:'no-store',signal});
    const text=await response.text();let body:unknown=text;try{body=text?JSON.parse(text):null;}catch{}
    if(!response.ok)throw new Error(`MESH_HTTP_${response.status}`);
+   if(!body||typeof body!=='object')throw new Error('MESH_RESPONSE_INVALID');
+   const message=body as Record<string,unknown>;
+   if(message.protocol!=='soul-mesh/1'||message.contractVersion!=='1.1.0'||message.source!==envelope.target||message.target!=='N05'||message.correlationId!==envelope.correlationId)throw new Error('MESH_RESPONSE_IDENTITY_INVALID');
+   const responseMessage=message as Parameters<typeof verifySoulMeshResponse>[1];
+   if(hmacSecret&&!verifySoulMeshResponse(envelope as never,responseMessage,hmacSecret,String(message.nonce??(responseMessage as any).meta?.nonce??''),String(message.hmac??'')))throw new Error('MESH_RESPONSE_HMAC_INVALID');
    return {status:response.status,payload:body};
   });
  }
@@ -41,7 +48,7 @@ export class N05PeerMeshBridge {
    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),this.timeoutMs);const started=Date.now();
    try{
     const nonce=createSoulMeshNonce();
-    const envelope:N05MeshEnvelope={protocol:'soul-mesh/1',id:randomUUID(),correlationId,traceId,source:'N05',target:peer,kind:'request',capability,payload,timestamp:Date.now(),nonce,transport:'http',meta:{runtime:'n05-peer-bridge',transport:'http-json',nonce,traceId}};
+    const envelope:N05MeshEnvelope={protocol:'soul-mesh/1',contractVersion:'1.1.0',id:randomUUID(),correlationId,traceId,source:'N05',target:peer,kind:'request',capability,payload,timestamp:Date.now(),nonce,transport:'http',meta:{runtime:'n05-peer-bridge',transport:'http-json',nonce,traceId}};
     const routed=await this.transportRouter.send(peer,envelope,controller.signal);
     state.healthy=true;state.failures=0;state.latencyMs=Date.now()-started;
     return{peer,payload:(routed.result as {payload:unknown}).payload,status:(routed.result as {status:number}).status,latencyMs:state.latencyMs,attempt,transport:routed.name};
