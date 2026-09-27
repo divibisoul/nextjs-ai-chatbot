@@ -34,7 +34,7 @@ export class N05PeerMeshBridge {
    if(!body||typeof body!=='object')throw new Error('MESH_RESPONSE_INVALID');
    const message=body as Record<string,unknown>;
    if(message.protocol!=='soul-mesh/1'||message.contractVersion!=='1.1.0'||message.source!==envelope.target||message.target!=='N05'||message.correlationId!==envelope.correlationId)throw new Error('MESH_RESPONSE_IDENTITY_INVALID');
-   const responseMessage=message as Parameters<typeof verifySoulMeshResponse>[1];
+   const responseMessage=message as unknown as Parameters<typeof verifySoulMeshResponse>[1];
    if(hmacSecret&&!verifySoulMeshResponse(envelope as never,responseMessage,hmacSecret,String(message.nonce??(responseMessage as any).meta?.nonce??''),String(message.hmac??'')))throw new Error('MESH_RESPONSE_HMAC_INVALID');
    return {status:response.status,payload:body};
   });
