@@ -6,7 +6,7 @@ test('N05 exposes additive SARA operations beyond chat cycle', async () => {
   const originalFetch = globalThis.fetch;
   const oldUrl = process.env.SARA_BASE_URL;
   const oldToken = process.env.SARA_API_TOKEN;
-  let observed: { path: string; method: string; auth?: string; correlation?: string } | null = null;
+  let observed: { path: string; method: string; auth?: string; correlation?: string } = { path: '', method: '' };
 
   process.env.SARA_BASE_URL = 'http://sara.test';
   delete process.env.SARA_API_TOKEN;
