@@ -90,7 +90,8 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "usehooks-ts": "^3.1.0",
-    "zod": "^3.25.68"
+    "zod": "^3.25.68",
+    "@radix-ui/react-dropdown-menu": "^2.1.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
