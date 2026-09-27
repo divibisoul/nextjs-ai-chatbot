@@ -2,7 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   experimental: {
-    ppr: true,
+    // PPR was canary-only; keep the historical switch explicit while using stable Next.js.
+    ppr: false,
   },
   images: {
     remotePatterns: [

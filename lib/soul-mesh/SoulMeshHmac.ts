@@ -6,6 +6,7 @@ const MAX_CLOCK_SKEW_MS = 30_000;
 function canonicalize(message: SoulMeshMessage, nonce: string): string {
   return JSON.stringify({
     protocol: message.protocol,
+    contractVersion: message.contractVersion,
     id: message.id,
     correlationId: message.correlationId,
     source: message.source,
@@ -14,6 +15,7 @@ function canonicalize(message: SoulMeshMessage, nonce: string): string {
     capability: message.capability ?? null,
     payload: message.payload,
     timestamp: message.timestamp,
+    transport: message.meta?.transport,
     meta: message.meta ?? null,
     nonce,
   });
@@ -35,4 +37,41 @@ export function verifySoulMeshMessage(message: SoulMeshMessage, secret: string, 
   const actual = Buffer.from(hmac, 'hex');
   const wanted = Buffer.from(expected, 'hex');
   return actual.length === wanted.length && timingSafeEqual(actual, wanted);
+}
+
+
+export function verifySoulMeshResponse(
+  request: SoulMeshMessage,
+  response: SoulMeshMessage & { nonce?: string; hmac?: string },
+  secret: string,
+  nonce = response.nonce ?? response.meta?.nonce ?? '',
+  hmacValue = response.hmac ?? '',
+  now = Date.now(),
+): boolean {
+  if (!secret || !nonce || !hmacValue) return false;
+  if (response.correlationId !== request.correlationId) return false;
+  if (response.source !== request.target || response.target !== request.source) return false;
+  if (response.kind !== 'response' && response.kind !== 'error') return false;
+  if (!Number.isFinite(response.timestamp) || Math.abs(now - response.timestamp) > MAX_CLOCK_SKEW_MS) return false;
+  const canonical = JSON.stringify({
+    version: '1.0',
+    contractVersion: response.contractVersion,
+    messageId: response.id,
+    source: response.source,
+    target: response.target,
+    timestamp: response.timestamp,
+    nonce,
+    correlationId: response.correlationId,
+    type: response.kind === 'error' ? 'ERROR' : 'TASK_RESULT',
+    payload: { capability: response.capability ?? '', payload: response.payload ?? {} },
+  });
+  try {
+    const expected = createHmac('sha256', secret).update(canonical, 'utf8').digest('hex');
+    if (!/^[0-9a-f]{64}$/i.test(hmacValue)) return false;
+    const actual = Buffer.from(hmacValue, 'hex');
+    const wanted = Buffer.from(expected, 'hex');
+    return actual.length === wanted.length && timingSafeEqual(actual, wanted);
+  } catch {
+    return false;
+  }
 }
