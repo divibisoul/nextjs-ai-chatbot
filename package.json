@@ -96,7 +96,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@playwright/test": "^1.50.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/d3-scale": "^4.0.8",
     "@types/node": "^22.8.6",
@@ -106,7 +106,7 @@
     "@types/react-dom": "^18",
     "drizzle-kit": "^0.25.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.5",
+    "eslint-config-next": "^15.5.25",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-tailwindcss": "^3.17.5",
@@ -126,15 +126,15 @@
       "postcss": "8.5.28",
       "playwright": "1.63.0",
       "glob": "10.5.0",
-      "minimatch@3.1.2": "3.1.4",
-      "minimatch@9.0.5": "9.0.7",
       "flatted": "3.4.2",
       "undici": "6.27.0",
       "picomatch@2.3.1": "2.3.2",
       "picomatch@4.0.2": "4.0.4",
       "drizzle-orm": "0.45.2",
       "linkify-it": "5.0.2",
-      "ws": "8.21.0"
+      "ws": "8.21.0",
+      "minimatch@9": "9.0.7",
+      "minimatch@3": "3.1.4"
     }
   }
 }
