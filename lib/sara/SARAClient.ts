@@ -1,3 +1,13 @@
+export type SaraFederatedContext = {
+  session_id?: string;
+  client?: string;
+  research_snippets?: string[];
+  user_feedback_refs?: string[];
+  pipeline?: Record<string, unknown>;
+  probabilistic?: Record<string, unknown>;
+  scenarios?: Array<{ name: string; note: string }>;
+} & Record<string, unknown>;
+
 const BASE_URL = () => (process.env.SARA_BASE_URL ?? '').trim().replace(/\/$/, '');
 const TOKEN = () => (process.env.SARA_API_TOKEN ?? '').trim();
 
@@ -21,7 +31,7 @@ export function extractMessageText(message: unknown): string {
     .trim();
 }
 
-export async function saraCycle(input: string, cycleId?: string): Promise<{
+export async function saraCycle(input: string, cycleId?: string, context?: SaraFederatedContext): Promise<{
   cycle_id: string;
   final_state: string;
   converged: boolean;
@@ -44,7 +54,11 @@ export async function saraCycle(input: string, cycleId?: string): Promise<{
         accept: 'application/json',
         'X-Correlation-ID': correlationId,
       },
-      body: JSON.stringify({ input, cycle_id: correlationId }),
+      body: JSON.stringify({
+        input,
+        cycle_id: correlationId,
+        ...(context ? { context: { ...context, client: context.client ?? 'n05' } } : {}),
+      }),
       signal: controller.signal,
       cache: 'no-store',
     });
@@ -63,6 +77,7 @@ export async function saraCycle(input: string, cycleId?: string): Promise<{
       rollback_performed: unknown;
       execution_report: unknown;
       trace_hash: unknown;
+      probabilistic?: unknown;
     }>;
     if (
       typeof result.cycle_id !== 'string' ||
@@ -82,6 +97,9 @@ export async function saraCycle(input: string, cycleId?: string): Promise<{
       rollback_performed: result.rollback_performed,
       execution_report: result.execution_report as Record<string, unknown>,
       trace_hash: result.trace_hash,
+      ...(result.probabilistic && typeof result.probabilistic === 'object'
+        ? { probabilistic: result.probabilistic as Record<string, unknown> }
+        : {}),
     };
   } finally {
     clearTimeout(timer);
@@ -170,12 +188,28 @@ export async function saraState(): Promise<Record<string, unknown>> {
   return saraAuxRequest('/v1/state');
 }
 
-export async function saraAudit(input: string, correlationId?: string): Promise<Record<string, unknown>> {
+export async function saraAudit(
+  input: string,
+  correlationId?: string,
+  context?: SaraFederatedContext,
+): Promise<Record<string, unknown>> {
   if (!input.trim()) throw new Error('SARA_INPUT_REQUIRED');
-  return saraAuxRequest('/v1/audit', { method: 'POST', body: { input }, correlationId });
+  return saraAuxRequest('/v1/audit', {
+    method: 'POST',
+    body: { input, ...(context ? { context: { ...context, client: context.client ?? 'n05' } } : {}) },
+    correlationId,
+  });
 }
 
-export async function saraRegenerate(input: string, correlationId?: string): Promise<Record<string, unknown>> {
+export async function saraRegenerate(
+  input: string,
+  correlationId?: string,
+  context?: SaraFederatedContext,
+): Promise<Record<string, unknown>> {
   if (!input.trim()) throw new Error('SARA_INPUT_REQUIRED');
-  return saraAuxRequest('/v1/regenerate', { method: 'POST', body: { input }, correlationId });
+  return saraAuxRequest('/v1/regenerate', {
+    method: 'POST',
+    body: { input, ...(context ? { context: { ...context, client: context.client ?? 'n05' } } : {}) },
+    correlationId,
+  });
 }
