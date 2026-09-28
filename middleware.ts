@@ -17,6 +17,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  /*
+   * The canonical Mesh endpoint has its own HMAC/replay/timestamp
+   * authorization boundary. Do not send machine-to-machine Mesh
+   * traffic through the interactive NextAuth redirect middleware.
+   */
+  if (pathname === '/api/soul-mesh') {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
