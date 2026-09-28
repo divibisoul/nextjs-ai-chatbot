@@ -31,10 +31,20 @@ export async function forwardClareiraToN01(packet:ClareiraPacket):Promise<unknow
   try{
     const response=await fetch(base+'/api/soul-mesh',{method:'POST',headers,body:JSON.stringify(message),cache:'no-store'});
     const body=await response.json().catch(()=>null);
-    if(!response.ok) throw new Error(`N01_CLAREIRA_HTTP_${response.status}`);
+    if(!response.ok) {
+      const code=body?.payload?.code ?? body?.error?.code ?? `N01_CLAREIRA_HTTP_${response.status}`;
+      throw new Error(String(code));
+    }
     const responsePayload=(body && typeof body==='object') ? ((body as any).payload ?? body) : null;
-    accepted++; inFlight=Math.max(0,inFlight-1); lastLatency=Math.max(0,Date.now()-packet.timestamp);
-    if(responsePayload && responsePayload.processed === true){ processed++; } samples.push(lastLatency); if(samples.length>128)samples.shift();
+    const didAccept=responsePayload?.accepted===true;
+    const didProcess=responsePayload?.processed===true;
+    accepted += didAccept ? 1 : 0;
+    inFlight=Math.max(0,inFlight-1);
+    lastLatency=Math.max(0,Date.now()-packet.timestamp);
+    if(didProcess) processed++;
+    if(!didAccept) throw new Error('N01_CLAREIRA_NOT_ACCEPTED');
+    samples.push(lastLatency);
+    if(samples.length>128)samples.shift();
     return body;
   }catch(error){errored++;inFlight=Math.max(0,inFlight-1);throw error;}
 }
