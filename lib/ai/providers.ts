@@ -13,8 +13,8 @@ import {
 } from './models.test';
 import { isTestEnvironment } from '../constants';
 
-const openAIEnabled = process.env.SOUL_OPENAI_PROVIDER_ENABLED === 'true' && Boolean(process.env.OPENAI_API_KEY?.trim());
-const openAIModel = process.env.OPENAI_MODEL?.trim() || 'gpt-5.6-luna';
+const openAIModel = process.env.OPENAI_MODEL?.trim() || '';
+const openAIEnabled = process.env.SOUL_OPENAI_PROVIDER_ENABLED === 'true' && Boolean(process.env.OPENAI_API_KEY?.trim()) && Boolean(openAIModel);
 const openAIBaseURL = process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1';
 
 const openAICompatible = openAIEnabled
