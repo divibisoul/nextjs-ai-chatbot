@@ -1,0 +1,104 @@
+{
+  "repository": "divibisoul/nextjs-ai-chatbot",
+  "nucleus": "N05",
+  "targets": [
+    {
+      "id": "artifacts",
+      "terms": [
+        "artifact",
+        "artifacts"
+      ],
+      "paths": [
+        "app",
+        "components",
+        "lib",
+        "scripts"
+      ]
+    },
+    {
+      "id": "documents",
+      "terms": [
+        "document",
+        "documents",
+        "documentProcessor"
+      ],
+      "paths": [
+        "app",
+        "components",
+        "lib",
+        "scripts"
+      ]
+    },
+    {
+      "id": "inference",
+      "terms": [
+        "generateText",
+        "streamText",
+        "inference",
+        "model"
+      ],
+      "paths": [
+        "app",
+        "lib",
+        "scripts"
+      ]
+    },
+    {
+      "id": "tools",
+      "terms": [
+        "tool",
+        "tools",
+        "toolRegistry",
+        "toolExecution"
+      ],
+      "paths": [
+        "app",
+        "components",
+        "lib",
+        "scripts"
+      ]
+    },
+    {
+      "id": "memory",
+      "terms": [
+        "memory",
+        "context",
+        "vector",
+        "embedding"
+      ],
+      "paths": [
+        "app",
+        "lib",
+        "scripts"
+      ]
+    },
+    {
+      "id": "execution",
+      "terms": [
+        "execute",
+        "execution",
+        "runAgent",
+        "agent"
+      ],
+      "paths": [
+        "app",
+        "lib",
+        "scripts"
+      ]
+    },
+    {
+      "id": "mesh",
+      "terms": [
+        "SoulMesh",
+        "soul-mesh",
+        "HMAC",
+        "heartbeat"
+      ],
+      "paths": [
+        "app",
+        "lib",
+        "scripts"
+      ]
+    }
+  ]
+}
