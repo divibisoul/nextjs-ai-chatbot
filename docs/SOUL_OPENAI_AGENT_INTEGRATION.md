@@ -51,3 +51,6 @@ RUNTIME: requires `SOUL_OPENAI_PROVIDER_ENABLED=true` plus a valid server-side `
 E2E: requires N07 → N05 → OpenAI provider with correlation/provenance preserved.
 
 No provider is marked ONLINE from configuration alone.
+
+## Latest validation correction
+CI exposed two unsupported assumptions and they were corrected without rollback: provider settings now match the installed `@ai-sdk/openai-compatible` version, and the existing Clareira accepted-packet metric is represented in the shared contract. The dependency-review workflow has passed; exact-head typecheck remains the promotion gate.
