@@ -28,13 +28,14 @@ if(message.capability==='octacore.execute'){
   const value=message.payload&&typeof message.payload==='object'&&!Array.isArray(message.payload)?message.payload as Record<string,unknown>:null;
   if(!value)return NextResponse.json(response(message,{code:'OCTACORE_N05_PAYLOAD_MUST_BE_OBJECT',traceId},'error',traceId),{status:400});
   try{
-    return NextResponse.json(await executeOctaCoreN05({
+    const octacoreResult = await executeOctaCoreN05({
       capability:typeof value.capability==='string'?value.capability:'',
       payload:value.payload,
       job_id:typeof value.job_id==='string'?value.job_id:undefined,
       correlation_id:message.correlationId,
       source:message.source,
-    }) as any,{status:200});
+    });
+    return NextResponse.json(response(message,octacoreResult,'response',traceId),{status:200});
   }catch(error){
     return NextResponse.json(response(message,{code:'OCTACORE_N05_EXECUTION_ERROR',detail:error instanceof Error?error.message:String(error),traceId},'error',traceId),{status:502});
   }
