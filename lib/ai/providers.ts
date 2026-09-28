@@ -22,7 +22,6 @@ const openAICompatible = openAIEnabled
       name: 'soul-openai',
       apiKey: process.env.OPENAI_API_KEY,
       baseURL: openAIBaseURL,
-      supportsStructuredOutputs: true,
     })
   : null;
 
