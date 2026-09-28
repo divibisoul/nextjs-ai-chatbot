@@ -4,6 +4,7 @@ import {
   wrapLanguageModel,
 } from 'ai';
 import { xai } from '@ai-sdk/xai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import {
   artifactModel,
   chatModel,
@@ -11,6 +12,20 @@ import {
   titleModel,
 } from './models.test';
 import { isTestEnvironment } from '../constants';
+
+const openAIEnabled = process.env.SOUL_OPENAI_PROVIDER_ENABLED === 'true' && Boolean(process.env.OPENAI_API_KEY?.trim());
+const openAIModel = process.env.OPENAI_MODEL?.trim() || 'gpt-5.6-luna';
+const openAIBaseURL = process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1';
+
+const openAICompatible = openAIEnabled
+  ? createOpenAICompatible({
+      name: 'soul-openai',
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: openAIBaseURL,
+      includeUsage: true,
+      supportsStructuredOutputs: true,
+    })
+  : null;
 
 export const myProvider = isTestEnvironment
   ? customProvider({
@@ -23,13 +38,13 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
-        'chat-model-reasoning': wrapLanguageModel({
+        'chat-model': openAICompatible?.languageModel(openAIModel) ?? xai('grok-2-vision-1212'),
+        'chat-model-reasoning': openAICompatible?.languageModel(openAIModel) ?? wrapLanguageModel({
           model: xai('grok-3-mini-beta'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
+        'title-model': openAICompatible?.languageModel(openAIModel) ?? xai('grok-2-1212'),
+        'artifact-model': openAICompatible?.languageModel(openAIModel) ?? xai('grok-2-1212'),
       },
       imageModels: {
         'small-model': xai.imageModel('grok-2-image'),
