@@ -34,6 +34,7 @@ export interface ClareiraMetrics {
   channels: { total: number; open: number };
   packets: {
     ingested: number;
+    accepted: number;
     processed: number;
     dropped: number;
     errored: number;
