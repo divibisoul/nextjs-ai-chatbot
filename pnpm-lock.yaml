@@ -32,6 +32,9 @@ importers:
       '@ai-sdk/react':
         specifier: 2.0.0-beta.6
         version: 2.0.0-beta.6(react@19.0.0-rc-45804af1-20241021)(zod@3.25.68)
+      '@ai-sdk/openai-compatible':
+        specifier: 1.0.0-beta.2
+        version: 1.0.0-beta.2(zod@3.25.68)
       '@ai-sdk/xai':
         specifier: 2.0.0-beta.2
         version: 2.0.0-beta.2(zod@3.25.68)
