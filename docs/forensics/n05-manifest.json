@@ -12,7 +12,8 @@
         "app",
         "components",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     },
     {
@@ -26,7 +27,8 @@
         "app",
         "components",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     },
     {
@@ -40,7 +42,8 @@
       "paths": [
         "app",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     },
     {
@@ -55,7 +58,8 @@
         "app",
         "components",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     },
     {
@@ -69,7 +73,8 @@
       "paths": [
         "app",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     },
     {
@@ -83,7 +88,8 @@
       "paths": [
         "app",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     },
     {
@@ -97,7 +103,8 @@
       "paths": [
         "app",
         "lib",
-        "scripts"
+        "scripts",
+        "src"
       ]
     }
   ]
