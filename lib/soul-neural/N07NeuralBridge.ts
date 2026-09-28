@@ -190,7 +190,7 @@ export class N07NeuralBridge {
       const response = await fetch(`${this.url}/api/soul-mesh`, {
         method: "POST",
         headers,
-        body: JSON.stringify(envelope),
+        body: signature ? JSON.stringify({ ...envelope, hmac: signature }) : JSON.stringify(envelope),
         signal: controller.signal,
       });
       const result = await response.json() as Record<string, unknown>;
