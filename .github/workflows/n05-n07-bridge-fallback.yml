@@ -1,0 +1,60 @@
+name: N05 N07 Bridge Fallback
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-hmac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SOUL_N07_URL: ${{ secrets.SOUL_N07_URL }}
+      SOUL_MESH_HMAC_SECRET: ${{ secrets.SOUL_MESH_HMAC_SECRET }}
+    steps:
+      - name: Capture runner evidence
+        run: |
+          set -euo pipefail
+          echo "runner.name=${RUNNER_NAME}"
+          echo "runner.os=${RUNNER_OS}"
+          echo "runner.arch=${RUNNER_ARCH}"
+          echo "runner.environment=${RUNNER_ENVIRONMENT}"
+          echo "github.sha=${GITHUB_SHA}"
+          node --version
+          npm --version
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Validate runtime secrets
+        run: |
+          set -euo pipefail
+          test -n "${SOUL_N07_URL:-}" || { echo 'MISSING: SOUL_N07_URL'; exit 1; }
+          test -n "${SOUL_MESH_HMAC_SECRET:-}" || { echo 'MISSING: SOUL_MESH_HMAC_SECRET'; exit 1; }
+          test "${#SOUL_MESH_HMAC_SECRET}" -ge 16 || { echo 'INVALID: SOUL_MESH_HMAC_SECRET too short'; exit 1; }
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck Soul Mesh
+        run: pnpm run typecheck:mesh
+
+      - name: Execute real N05 to N07 HMAC smoke test
+        run: node scripts/manual-hmac-validator.mjs
+
+      - name: Execute existing bridge tests
+        run: pnpm exec tsx --test lib/soul-neural/N07Bridge.test.ts
