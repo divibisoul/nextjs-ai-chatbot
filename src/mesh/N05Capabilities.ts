@@ -2,6 +2,7 @@ import { N05MeshGateway } from './N05MeshGateway';
 import { N05_OWNERSHIP } from './N05OwnershipMatrix';
 import { N05InferenceCache } from './N05InferenceCache';
 import { n05InferencePool } from './N05InferencePool';
+import { n05ModelRouter } from './N05ModelRouter';
 import { N05AgentRegistry } from './N05AgentRegistry';
 import type { N05Agent } from './N05AgentContract';
 import type { SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
@@ -18,7 +19,7 @@ const systems: Record<string, string> = {
 };
 
 function payloadToRequest(payload: unknown, system?: string): SoulInferenceRequest {
-  if (typeof payload === 'string') return { prompt: payload, system, model: 'chat-model' };
+  if (typeof payload === 'string') return { prompt: payload, system } as SoulInferenceRequest;
   if (!payload || typeof payload !== 'object') throw new TypeError('N05_INFERENCE_PAYLOAD_REQUIRED');
   return { ...(payload as Partial<SoulInferenceRequest>), ...(system ? { system } : {}) } as SoulInferenceRequest;
 }
