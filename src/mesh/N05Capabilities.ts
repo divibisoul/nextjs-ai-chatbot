@@ -35,20 +35,38 @@ export function createN05CapabilityGateway() {
     execute: async (request) => {
       const system = systems[request.capability];
       const input = payloadToRequest(request.payload, system);
+      const metadata = input.metadata ?? {};
+      const route = n05ModelRouter.route({
+        requestedModel: input.model,
+        complexity: metadata.n05_complexity ? Number(metadata.n05_complexity) : undefined,
+        latencyTargetMs: metadata.n05_latency_target_ms ? Number(metadata.n05_latency_target_ms) : undefined,
+        costWeight: metadata.n05_cost_weight ? Number(metadata.n05_cost_weight) : undefined,
+        qualityWeight: metadata.n05_quality_weight ? Number(metadata.n05_quality_weight) : undefined,
+      });
+      const routedInput = {
+        ...input,
+        model: route.model,
+        metadata: {
+          ...metadata,
+          n05_route_model: route.model,
+          n05_route_score: String(route.score),
+          n05_route_reason: route.reason,
+        },
+      };
       const isConversation = request.capability.startsWith('conversation.');
       const priority = request.source === 'N01' ? 100 : 50;
 
       // Stateless inference is safely cacheable. Conversation remains uncached
       // because its result depends on evolving context/history.
       if (!isConversation) {
-        const cached = cache.get(input);
+        const cached = cache.get(routedInput);
         if (cached !== undefined) return cached;
-        const result = await n05InferencePool.run(input, priority);
-        cache.set(input, result);
+        const result = await n05InferencePool.run(routedInput, priority);
+        cache.set(routedInput, result);
         return result;
       }
 
-      return n05InferencePool.run(input, priority);
+      return n05InferencePool.run(routedInput, priority);
     },
   };
   agents.register(inferenceAgent);
