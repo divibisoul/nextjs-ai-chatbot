@@ -13,6 +13,7 @@ export const N05_OWNERSHIP: Record<string,OwnershipRule> = {
   'cognitive.': { owner:'N06', consumers:['N01','N02','N04','N05','N07'], fallback:['N05','N02'] },
   'tool.': { owner:'N04', consumers:['N01','N02','N03','N05','N06','N07'], fallback:['N06'] },
   'support.': { owner:'N06', consumers:['N05','N07'], fallback:['N05'] },
+  'gemini.': { owner:'N05', consumers:['N01','N02','N03','N04','N06','N07'], fallback:['N02'] },
 };
 
 export function ownershipFor(capability:string){return Object.entries(N05_OWNERSHIP).find(([prefix])=>capability.startsWith(prefix))?.[1];}
