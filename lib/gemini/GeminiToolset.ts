@@ -374,7 +374,16 @@ export async function geminiEmbed(text: string) {
   };
 }
 
-export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId?: string) {
+export type N05MemoryContext = {
+  userId: string;
+  sessionId: string;
+};
+
+export function createN05GeminiTools(
+  ledger: GeminiEvidenceLedger,
+  correlationId?: string,
+  memoryContext?: N05MemoryContext,
+) {
   return {
     geminiGoogleSearch: tool({
       description:
@@ -450,6 +459,84 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           model: result.model,
           dimensions: result.dimensions,
           values: result.values,
+        };
+      },
+    }),
+    n07MemoryRecord: tool({
+      description:
+        'Persist an evidence-backed semantic memory in N07/Supabase. The embeddingEvidenceId must reference a real 768-dimensional embedding produced by geminiEmbed in this same request.',
+      inputSchema: z.object({
+        embeddingEvidenceId: z.string().min(1),
+        summary: z.string().min(1).max(8_000),
+        tags: z.array(z.string().min(1).max(64)).max(32).default([]),
+      }),
+      execute: async ({ embeddingEvidenceId, summary, tags }) => {
+        if (!memoryContext) throw new Error('N05_MEMORY_CONTEXT_UNAVAILABLE');
+        const evidence = ledger.get(embeddingEvidenceId);
+        if (!evidence || evidence.type !== 'embedding') {
+          throw new Error('GEMINI_EMBEDDING_EVIDENCE_NOT_FOUND:' + embeddingEvidenceId);
+        }
+        const payload = evidence.payload;
+        if (!payload || typeof payload !== 'object') throw new Error('GEMINI_EMBEDDING_EVIDENCE_INVALID');
+        const values = (payload as Record<string, unknown>).values;
+        if (
+          !Array.isArray(values) ||
+          values.length !== EMBEDDING_DIMENSIONS ||
+          values.some((value) => typeof value !== 'number' || !Number.isFinite(value))
+        ) {
+          throw new Error('GEMINI_EMBEDDING_EVIDENCE_DIMENSIONS_INVALID');
+        }
+        const bridge = new N07NeuralBridge('N05');
+        const result = await bridge.recordMemory(
+          values,
+          summary,
+          tags,
+          memoryContext.userId,
+          memoryContext.sessionId,
+          evidence.id,
+          evidence.hash,
+          String((payload as Record<string, unknown>).model ?? embeddingModel()),
+          correlationId,
+        );
+        return {
+          status: result.status ?? 'ok',
+          stored: result.status === 'ok',
+          evidenceId: evidence.id,
+          evidenceHash: evidence.hash,
+          correlationId: result.correlationId,
+          target: 'N07',
+        };
+      },
+    }),
+    n07MemorySearch: tool({
+      description:
+        'Retrieve the user’s top semantic memories using a fresh Gemini embedding and N07 pgvector similarity search. Default threshold is 0.75 and default count is 5.',
+      inputSchema: z.object({
+        query: z.string().min(1).max(16_000),
+        similarityThreshold: z.number().min(0).max(1).default(0.75),
+        count: z.number().int().min(1).max(20).default(5),
+      }),
+      execute: async ({ query, similarityThreshold, count }) => {
+        if (!memoryContext) throw new Error('N05_MEMORY_CONTEXT_UNAVAILABLE');
+        const embedded = await geminiEmbed(query);
+        const evidence = ledger.record('embedding', embedded);
+        const bridge = new N07NeuralBridge('N05');
+        const result = await bridge.searchMemory(
+          embedded.values,
+          memoryContext.userId,
+          similarityThreshold,
+          count,
+          correlationId,
+        );
+        return {
+          status: result.status ?? 'ok',
+          evidenceId: evidence.id,
+          evidenceHash: evidence.hash,
+          model: embedded.model,
+          dimensions: embedded.dimensions,
+          matches: result.matches,
+          matchCount: result.matches.length,
+          correlationId: result.correlationId,
         };
       },
     }),
