@@ -41,3 +41,5 @@ export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'n07.cognitive.execute',version:'1.0',description:'N07 fused cognitive execution; final fusion-stage capability',request:true,response:true,events:false,owner:'N07',execution:'remote' },
   { id:'n07.compute.execute',version:'1.0',description:'N07 federated compute execution; final fusion-stage capability',request:true,response:true,events:false,owner:'N07',execution:'remote' },
 ];
+
+export const N07_NEURAL_PARAMETERS_CAPABILITY: SoulMeshCapability = { id:'n07.neural.parameters',version:'1.0.0',description:'N07 canonical neural parameter snapshot',request:true,response:true,events:false,owner:'N07',execution:'remote' };
