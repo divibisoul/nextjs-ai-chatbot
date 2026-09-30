@@ -25,5 +25,7 @@ jobs:
         run: pnpm run typecheck:mesh
       - name: Mesh unit tests
         run: pnpm run test:mesh
+      - name: Gemini tool and learning tests
+        run: pnpm run test:gemini
       - name: Production build
         run: pnpm run build
