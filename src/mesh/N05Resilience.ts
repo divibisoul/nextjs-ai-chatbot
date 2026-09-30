@@ -8,6 +8,12 @@ export class N05CircuitBreaker {
   status(peer='global'){const state=this.states.get(peer);return {failures:state?.failures??0,open:!!state&&Date.now()<state.openedUntil,retryAt:state?.openedUntil??0}}
 }
 export async function withN05Timeout<T>(task:()=>Promise<T>,ms=30000):Promise<T>{const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),ms);try{return await Promise.race([task(),new Promise<T>((_,reject)=>setTimeout(()=>reject(new Error('SOUL_MESH_TIMEOUT')),ms))])}finally{clearTimeout(timeout);void controller}}
-export function backoffDelay(attempt:number,base=250,max=8000){return Math.min(max,base*2**attempt)+Math.floor(Math.random()*100)}
+function cryptographicJitter(maxExclusive:number):number{
+  if(maxExclusive<=0)return 0;
+  const values=new Uint32Array(1);
+  globalThis.crypto.getRandomValues(values);
+  return Math.floor((values[0]/4294967296)*maxExclusive);
+}
+export function backoffDelay(attempt:number,base=250,max=8000){return Math.min(max,base*2**attempt)+cryptographicJitter(100)}
 export async function withN05Retry<T>(operation:()=>Promise<T>,peer='global',options:{retries?:number;breaker?:N05CircuitBreaker}={}){const breaker=options.breaker??n05CircuitBreaker;if(!breaker.canRequest(peer))throw new Error(`SOUL_MESH_CIRCUIT_OPEN:${peer}`);const retries=options.retries??2;let last:unknown;for(let attempt=0;attempt<=retries;attempt++){try{const value=await withN05Timeout(operation,30000);breaker.success(peer);return value}catch(error){last=error;breaker.failure(peer);if(attempt<retries)await new Promise(resolve=>setTimeout(resolve,backoffDelay(attempt)));}}throw last}
 export const n05CircuitBreaker=new N05CircuitBreaker();
