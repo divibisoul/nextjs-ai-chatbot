@@ -7,13 +7,13 @@ settings:
 overrides:
   sharp: 0.35.4
   js-yaml: 4.3.2
-  brace-expansion: 1.1.18
+  brace-expansion: 1.1.21
   nanoid@3.3.9: 3.3.19
   postcss: 8.5.28
   playwright: 1.63.0
   glob: 10.5.0
   flatted: 3.4.2
-  undici: 6.27.0
+  undici: 6.28.1
   picomatch@2.3.1: 2.3.2
   picomatch@4.0.2: 4.0.4
   drizzle-orm: 0.45.2
@@ -1976,8 +1976,8 @@ packages:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
 
-  brace-expansion@1.1.18:
-    resolution: {integrity: sha512-Edep/X9fGqVNmzKBVsDYIOtD+z1tuezV70LBjdCst9Tqu76lsnvRiZ6oTic1n+/BIwX6QDGAO94PN4N2SADvtw==}
+  brace-expansion@1.1.21:
+    resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
 
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
@@ -3917,8 +3917,8 @@ packages:
   undici-types@6.20.0:
     resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
 
-  undici@6.27.0:
-    resolution: {integrity: sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==}
+  undici@6.28.1:
+    resolution: {integrity: sha512-zWpdTVD54H48CIybL0rWQ3ukpb9d23wM7eH5RtfdmeP70cWHNjtfo7P4vZX+5CoDcO53J4Pu5uXp7lNfjc6DRA==}
     engines: {node: '>=18.17'}
 
   unified@11.0.5:
@@ -5333,7 +5333,7 @@ snapshots:
       async-retry: 1.3.3
       bytes: 3.1.2
       is-buffer: 2.0.5
-      undici: 6.27.0
+      undici: 6.28.1
 
   '@vercel/functions@2.0.0': {}
 
@@ -5492,7 +5492,7 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
-  brace-expansion@1.1.18:
+  brace-expansion@1.1.21:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
@@ -6951,15 +6951,15 @@ snapshots:
 
   minimatch@10.2.6:
     dependencies:
-      brace-expansion: 1.1.18
+      brace-expansion: 1.1.21
 
   minimatch@3.1.4:
     dependencies:
-      brace-expansion: 1.1.18
+      brace-expansion: 1.1.21
 
   minimatch@9.0.7:
     dependencies:
-      brace-expansion: 1.1.18
+      brace-expansion: 1.1.21
 
   minimist@1.2.8: {}
 
@@ -7901,7 +7901,7 @@ snapshots:
 
   undici-types@6.20.0: {}
 
-  undici@6.27.0: {}
+  undici@6.28.1: {}
 
   unified@11.0.5:
     dependencies:
