@@ -482,8 +482,8 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           evidenceId,
           evidenceType: evidence.type,
           evidenceHash: evidence.hash,
-          interactionId: assessment.interactionId,
           ...assessment,
+          interactionId: assessment.interactionId,
           correlationId: result.correlationId,
         };
       },
