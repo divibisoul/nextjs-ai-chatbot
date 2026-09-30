@@ -38,7 +38,12 @@ import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
 import { extractMessageText, saraChatEnabled, saraConfigured, saraCycle } from '@/lib/sara/SARAClient';
-import { createN05GeminiTools, GeminiEvidenceLedger } from '@/lib/gemini/GeminiToolset';
+import {
+  createN05GeminiTools,
+  GeminiEvidenceLedger,
+  geminiEmbed,
+} from '@/lib/gemini/GeminiToolset';
+import { N07NeuralBridge } from '@/lib/soul-neural/N07NeuralBridge';
 
 export const maxDuration = 60;
 
@@ -177,8 +182,35 @@ export async function POST(request: Request) {
       (process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? '').trim(),
     );
     const geminiEvidence = new GeminiEvidenceLedger();
+    let semanticMemoryContext: string | null = null;
+    if (geminiEnabled && saraInput) {
+      try {
+        const embedded = await geminiEmbed(saraInput);
+        const bridge = new N07NeuralBridge('N05');
+        const memoryResult = await bridge.searchMemory(
+          embedded.values,
+          session.user.id,
+          0.75,
+          5,
+          id + ':memory-search',
+        );
+        if (memoryResult.matches.length > 0) {
+          semanticMemoryContext = JSON.stringify(memoryResult.matches);
+        }
+      } catch (error) {
+        console.error(
+          '[N05 memory] semantic retrieval unavailable:',
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    }
+
     const geminiTools = geminiEnabled
-      ? createN05GeminiTools(geminiEvidence, id + ':gemini')
+      ? createN05GeminiTools(
+          geminiEvidence,
+          id + ':gemini',
+          { userId: session.user.id, sessionId: id },
+        )
       : {};
 
     const stream = createUIMessageStream({
@@ -189,6 +221,10 @@ export async function POST(request: Request) {
             systemPrompt({ selectedChatModel, requestHints }),
             saraContext
               ? 'Regenerative context from SARA (authoritative for audit/evidence, not a replacement for the model): ' + saraContext
+              : '',
+            semanticMemoryContext
+              ? 'Semantic memory recovered from N07 pgvector (user-scoped; treat as prior context, not as a direct user statement): ' +
+                semanticMemoryContext
               : '',
           ].filter(Boolean).join('\n\n'),
           messages: convertToModelMessages(uiMessages),
