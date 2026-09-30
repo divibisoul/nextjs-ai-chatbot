@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { createHash } from 'node:crypto';
+import { tool } from 'ai';
 import { z } from 'zod';
 import { N07NeuralBridge } from '@/lib/soul-neural/N07NeuralBridge';
 
@@ -56,6 +57,20 @@ type InteractionResponse = {
   output_text?: string;
   steps?: unknown[];
   error?: unknown;
+};
+
+type LearningAssessment = {
+  target: string;
+  capability: string;
+  reward: number;
+  confidence: number;
+  outcome: string;
+  justification: string;
+};
+
+type GeminiFunctionCall = {
+  name?: string;
+  arguments?: unknown;
 };
 
 function apiKey(): string {
@@ -177,6 +192,99 @@ function collectCodeExecution(steps: unknown[] | undefined): Array<{ code?: stri
   return executions;
 }
 
+function collectFunctionCall(steps: unknown[] | undefined, name: string): GeminiFunctionCall | null {
+  if (!Array.isArray(steps)) return null;
+  for (const rawStep of steps) {
+    if (!rawStep || typeof rawStep !== 'object') continue;
+    const step = rawStep as Record<string, unknown>;
+    if (step.type !== 'function_call') continue;
+    const candidateName = typeof step.name === 'string' ? step.name.trim() : '';
+    if (candidateName !== name) continue;
+    return {
+      name: candidateName,
+      arguments: step.arguments,
+    };
+  }
+  return null;
+}
+
+function normalizeLearningAssessment(raw: unknown, target: string, capability: string): LearningAssessment {
+  if (!raw || typeof raw !== 'object') throw new Error('GEMINI_LEARNING_ASSESSMENT_INVALID');
+  const value = raw as Record<string, unknown>;
+  const assessedTarget = typeof value.target === 'string' ? value.target.trim() : '';
+  const assessedCapability = typeof value.capability === 'string' ? value.capability.trim() : '';
+  const reward = typeof value.reward === 'number' ? value.reward : Number(value.reward);
+  const confidence = typeof value.confidence === 'number' ? value.confidence : Number(value.confidence);
+  const outcome = typeof value.outcome === 'string' ? value.outcome.trim() : '';
+  const justification = typeof value.justification === 'string' ? value.justification.trim() : '';
+  if (!assessedTarget || assessedTarget !== target.trim()) throw new Error('GEMINI_LEARNING_ASSESSMENT_TARGET_MISMATCH');
+  if (!assessedCapability || assessedCapability !== capability.trim()) throw new Error('GEMINI_LEARNING_ASSESSMENT_CAPABILITY_MISMATCH');
+  if (!Number.isFinite(reward) || reward < -1 || reward > 1) throw new Error('GEMINI_LEARNING_ASSESSMENT_REWARD_INVALID');
+  if (!Number.isFinite(confidence) || confidence < 0 || confidence > 0.85) throw new Error('GEMINI_LEARNING_ASSESSMENT_CONFIDENCE_INVALID');
+  if (!outcome || outcome.length > 256) throw new Error('GEMINI_LEARNING_ASSESSMENT_OUTCOME_INVALID');
+  if (!justification || justification.length > 2_000) throw new Error('GEMINI_LEARNING_ASSESSMENT_JUSTIFICATION_INVALID');
+  return { target: target.trim(), capability: capability.trim(), reward, confidence, outcome, justification };
+}
+
+async function assessEvidenceWithGemini(
+  evidence: GeminiEvidence,
+  target: string,
+  capability: string,
+): Promise<LearningAssessment & { interactionId: string }> {
+  if (evidence.type === 'embedding') {
+    throw new Error('GEMINI_EMBEDDING_CANNOT_GRADE_EXECUTION_OUTCOME');
+  }
+  const evidenceJson = JSON.stringify({
+    evidenceId: evidence.id,
+    evidenceType: evidence.type,
+    evidenceHash: evidence.hash,
+    payload: evidence.payload,
+  }).slice(0, 24_000);
+
+  const response = await postJson<InteractionResponse>(INTERACTIONS_URL, {
+    model: model(),
+    input:
+      'Assess the observed execution evidence for learning. Do not invent facts. ' +
+      'The requested target and capability are fixed and must be returned exactly. ' +
+      'Assign reward in [-1,1] and confidence in [0,0.85]. Confidence is epistemic confidence, not success probability. ' +
+      'Return the structured function call only.\n\n' +
+      'Target: ' + target.trim() + '\nCapability: ' + capability.trim() +
+      '\nEvidence:\n' + evidenceJson,
+    tools: [
+      {
+        type: 'function',
+        name: 'emit_learning_assessment',
+        description: 'Emit a bounded learning assessment from supplied execution evidence.',
+        parameters: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            target: { type: 'string' },
+            capability: { type: 'string' },
+            reward: { type: 'number', minimum: -1, maximum: 1 },
+            confidence: { type: 'number', minimum: 0, maximum: 0.85 },
+            outcome: { type: 'string', minLength: 1, maxLength: 256 },
+            justification: { type: 'string', minLength: 1, maxLength: 2000 },
+          },
+          required: ['target', 'capability', 'reward', 'confidence', 'outcome', 'justification'],
+        },
+      },
+    ],
+  });
+  const call = collectFunctionCall(response.steps, 'emit_learning_assessment');
+  if (!call) throw new Error('GEMINI_LEARNING_ASSESSMENT_FUNCTION_NOT_CALLED');
+  let args = call.arguments;
+  if (typeof args === 'string') {
+    try {
+      args = JSON.parse(args);
+    } catch {
+      throw new Error('GEMINI_LEARNING_ASSESSMENT_ARGUMENTS_INVALID_JSON');
+    }
+  }
+  const assessment = normalizeLearningAssessment(args, target, capability);
+  return { ...assessment, interactionId: String(response.id ?? '') };
+}
+
 async function runInteraction(input: string, tools: InteractionTool[]): Promise<{
   interactionId: string;
   text: string;
@@ -270,13 +378,13 @@ export async function geminiEmbed(text: string) {
 
 export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId?: string) {
   return {
-    geminiGoogleSearch: {
+    geminiGoogleSearch: tool({
       description:
         'Ground a claim or research question in current Google Search results. Returns text and source citations. Use real evidence, not memory.',
       inputSchema: z.object({
         query: z.string().min(1).max(16_000),
       }),
-      execute: async ({ query }: { query: string }) => {
+      execute: async ({ query }) => {
         const result = await geminiGoogleSearch(query);
         const evidence = ledger.record('google_search', result);
         return {
@@ -288,14 +396,14 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           citations: result.citations,
         };
       },
-    },
-    geminiCodeExecution: {
+    }),
+    geminiCodeExecution: tool({
       description:
         'Use Gemini Python code execution for deterministic calculations or verification. The execution result becomes auditable evidence.',
       inputSchema: z.object({
         instruction: z.string().min(1).max(32_000),
       }),
-      execute: async ({ instruction }: { instruction: string }) => {
+      execute: async ({ instruction }) => {
         const result = await geminiCodeExecution(instruction);
         const evidence = ledger.record('code_execution', result);
         return {
@@ -307,21 +415,15 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           executions: result.executions,
         };
       },
-    },
-    geminiUrlContext: {
+    }),
+    geminiUrlContext: tool({
       description:
         'Read one or more supplied URLs with Gemini URL Context and return the synthesized result plus URL citations.',
       inputSchema: z.object({
         urls: z.array(z.string().url()).min(1).max(20),
         question: z.string().min(1).max(16_000),
       }),
-      execute: async ({
-        urls,
-        question,
-      }: {
-        urls: string[];
-        question: string;
-      }) => {
+      execute: async ({ urls, question }) => {
         const result = await geminiUrlContext(urls, question);
         const evidence = ledger.record('url_context', result);
         return {
@@ -333,14 +435,14 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           citations: result.citations,
         };
       },
-    },
-    geminiEmbed: {
+    }),
+    geminiEmbed: tool({
       description:
         'Generate a 768-dimensional Gemini embedding for semantic memory, clustering and learning-context retrieval. The vector is real model output.',
       inputSchema: z.object({
         text: z.string().min(1).max(32_000),
       }),
-      execute: async ({ text: value }: { text: string }) => {
+      execute: async ({ text: value }) => {
         const result = await geminiEmbed(value);
         const evidence = ledger.record('embedding', result);
         return {
@@ -352,46 +454,27 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           values: result.values,
         };
       },
-    },
-    n07LearningFeedback: {
+    }),
+    n07LearningFeedback: tool({
       description:
-        'Send measured feedback to the N07 canonical learning machine. EvidenceId is mandatory and must refer to evidence produced by another Gemini tool in this same request; never invent it.',
+        'Assess real Gemini/Search/Code/URL evidence with Gemini function calling, then send the bounded assessment to the N07 canonical learning machine. EvidenceId must come from a preceding evidence-producing tool call in this same request.',
       inputSchema: z.object({
         evidenceId: z.string().min(1),
         target: z.string().min(1).max(64),
         capability: z.string().min(1).max(256),
-        reward: z.number().min(-1).max(1),
-        confidence: z.number().min(0).max(1),
-        outcome: z.string().min(1).max(256),
-        justification: z.string().min(1).max(2_000),
       }),
-      execute: async ({
-        evidenceId,
-        target,
-        capability,
-        reward,
-        confidence,
-        outcome,
-        justification,
-      }: {
-        evidenceId: string;
-        target: string;
-        capability: string;
-        reward: number;
-        confidence: number;
-        outcome: string;
-        justification: string;
-      }) => {
+      execute: async ({ evidenceId, target, capability }) => {
         const evidence = ledger.get(evidenceId);
         if (!evidence) throw new Error('GEMINI_EVIDENCE_NOT_FOUND:' + evidenceId);
+        const assessment = await assessEvidenceWithGemini(evidence, target, capability);
         const bridge = new N07NeuralBridge('N05');
         const result = await bridge.feedback(
-          reward,
-          confidence,
-          target,
-          capability,
-          outcome,
-          'n05-gemini-evidence:' + evidence.type,
+          assessment.reward,
+          assessment.confidence,
+          assessment.target,
+          assessment.capability,
+          assessment.outcome,
+          'n05-gemini-function:' + evidence.type,
           correlationId,
         );
         return {
@@ -399,15 +482,11 @@ export function createN05GeminiTools(ledger: GeminiEvidenceLedger, correlationId
           evidenceId,
           evidenceType: evidence.type,
           evidenceHash: evidence.hash,
-          target,
-          capability,
-          reward,
-          confidence,
-          outcome,
-          justification,
+          interactionId: assessment.interactionId,
+          ...assessment,
           correlationId: result.correlationId,
         };
       },
-    },
+    }),
   };
 }
