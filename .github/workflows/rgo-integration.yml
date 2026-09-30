@@ -1,0 +1,17 @@
+name: rgo-integration
+on:
+  push:
+    branches: [rgo-integration-2026-09-28]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx --test lib/rgo/RgoFinding.test.ts
+      - run: pnpm exec tsc --noEmit
