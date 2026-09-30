@@ -25,6 +25,8 @@ export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'gemini.url_context',version:'1.0',description:'Gemini URL Context retrieval for supplied HTTP(S) resources',request:true,response:true,events:false,owner:'N05',execution:'tool' },
   { id:'gemini.embed',version:'1.0',description:'Gemini semantic embedding generation for memory and learning retrieval',request:true,response:true,events:false,owner:'N05',execution:'tool' },
   { id:'gemini.learning.assess',version:'1.0',description:'Gemini function-call assessment boundary for evidence-backed N07 learning feedback',request:true,response:true,events:true,owner:'N05',execution:'orchestration' },
+  { id:'memory.record',version:'1.0',description:'User-scoped semantic memory persistence backed by N07 pgvector',request:true,response:true,events:true,owner:'N07',execution:'remote' },
+  { id:'memory.search',version:'1.0',description:'User-scoped semantic memory retrieval backed by N07 pgvector',request:true,response:true,events:true,owner:'N07',execution:'remote' },
 
   { id:'mesh.health',version:'1.1',description:'N01 runtime and transport health',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'mesh.capabilities',version:'1.1',description:'N01 executable capability discovery',request:true,response:true,events:true,owner:'N01',execution:'remote' },
