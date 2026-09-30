@@ -20,7 +20,7 @@ export async function executeSoulInference(input: unknown) {
   const request = soulInferenceRequestSchema.parse(input);
 
   if (request.model === 'gemini-n02') {
-    const remote = await sendToNucleus('N02', 'gemini.text.generate', {
+    const remote = await sendToNucleus('N02', 'ai.generate', {
       text: request.prompt,
       systemInstruction: request.system,
       temperature: request.temperature,
@@ -39,7 +39,7 @@ export async function executeSoulInference(input: unknown) {
       metadata: {
         ...(request.metadata ?? {}),
         route: 'N02',
-        capability: 'gemini.text.generate',
+        capability: 'ai.generate',
       },
     };
   }
