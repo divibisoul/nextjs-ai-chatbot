@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { executeSoulInference } from './SoulMeshAI';
+import { geminiCodeExecution, geminiEmbed, geminiGoogleSearch, geminiUrlContext } from '@/lib/gemini/GeminiToolset';
 import { N05MeshGateway, type N05CapabilityHandler, type N05GatewayRequest, type N05GatewayResponse } from './N05MeshGateway';
 
 export type { N05CapabilityHandler };
