@@ -110,11 +110,64 @@ test('Learning feedback requires evidence generated in the same ledger', async (
         evidenceId: 'missing',
         target: 'N07',
         capability: 'neural.forward',
-        reward: 1,
-        confidence: 1,
-        outcome: 'success',
-        justification: 'no real evidence',
       }),
     /GEMINI_EVIDENCE_NOT_FOUND/,
   );
+});
+
+
+test('Gemini learning assessment requires a structured function call and uses its result', async () => {
+  const calls: unknown[] = [];
+  const restore = installFetch(async (input, init) => {
+    const body = init?.body ? JSON.parse(String(init.body)) : {};
+    calls.push(body);
+    return new Response(
+      JSON.stringify({
+        id: 'interaction-assess-1',
+        steps: [
+          {
+            type: 'function_call',
+            name: 'emit_learning_assessment',
+            arguments: {
+              target: 'N07',
+              capability: 'gemini.test',
+              reward: 0.75,
+              confidence: 0.8,
+              outcome: 'provider_success',
+              justification: 'Observed provider output and explicit evidence.',
+            },
+          },
+        ],
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+  });
+  try {
+    const ledger = new GeminiEvidenceLedger();
+    const evidence = ledger.record('google_search', {
+      text: 'Observed result',
+      citations: [{ title: 'Source', url: 'https://example.com/source' }],
+    });
+    const tools = createN05GeminiTools(ledger, 'corr-assess');
+    const originalBridge = globalThis.fetch;
+
+    await assert.rejects(
+      () =>
+        tools.n07LearningFeedback.execute({
+          evidenceId: evidence.id,
+          target: 'N07',
+          capability: 'gemini.test',
+        }),
+      /N07|SOUL_N07_URL|GEMINI/,
+    );
+
+    assert.ok(calls.length >= 1);
+    const request = calls[0] as Record<string, unknown>;
+    const declaredTools = request.tools as Array<Record<string, unknown>>;
+    assert.equal(declaredTools[0]?.type, 'function');
+    assert.equal(declaredTools[0]?.name, 'emit_learning_assessment');
+    globalThis.fetch = originalBridge;
+  } finally {
+    restore();
+  }
 });
