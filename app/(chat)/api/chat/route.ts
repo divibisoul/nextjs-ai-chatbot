@@ -194,23 +194,7 @@ export async function POST(request: Request) {
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
-              ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                  ...(geminiEnabled
-                    ? [
-                        'geminiGoogleSearch',
-                        'geminiCodeExecution',
-                        'geminiUrlContext',
-                        'geminiEmbed',
-                        'n07LearningFeedback',
-                      ]
-                    : []),
-                ],
+            selectedChatModel === 'chat-model-reasoning' ? [] : undefined,
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
             getWeather,
