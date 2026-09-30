@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { createHash } from 'node:crypto';
 import { tool } from 'ai';
 import { z } from 'zod';
