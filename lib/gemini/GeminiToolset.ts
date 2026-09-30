@@ -490,7 +490,7 @@ export function createN05GeminiTools(
         const result = await bridge.recordMemory(
           values,
           summary,
-          tags,
+          tags: tags ?? [],
           memoryContext.userId,
           memoryContext.sessionId,
           evidence.id,
