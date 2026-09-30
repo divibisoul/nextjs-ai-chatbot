@@ -6,6 +6,7 @@ import { N05AgentRegistry } from './N05AgentRegistry';
 import type { N05Agent } from './N05AgentContract';
 import type { SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
 import { sendToNucleus } from '@/lib/soul-mesh/adapter';
+import { geminiCodeExecution, geminiEmbed, geminiGoogleSearch, geminiUrlContext } from '@/lib/gemini/GeminiToolset';
 
 const systems: Record<string, string> = {
   'inference.reason': 'You are N05, the Soul inference engine. Reason precisely and return only the requested reasoning.',
@@ -55,6 +56,39 @@ export function createN05CapabilityGateway() {
   for (const capability of inferenceCapabilities) {
     const ownership = capability.startsWith('conversation.') ? N05_OWNERSHIP['conversation.'] : N05_OWNERSHIP['inference.'];
     gateway.register(capability, (request) => agents.execute(request), ownership);
+  }
+
+  const geminiAgent: N05Agent = {
+    id: 'N05-gemini-tool-agent',
+    name: 'N05 Gemini Tool Agent',
+    capabilities: ['gemini.google_search', 'gemini.code_execution', 'gemini.url_context', 'gemini.embed'],
+    execute: async (request) => {
+      const payload = request.payload;
+      if (!payload || typeof payload !== 'object') throw new TypeError('N05_GEMINI_PAYLOAD_REQUIRED');
+      const input = payload as Record<string, unknown>;
+      switch (request.capability) {
+        case 'gemini.google_search':
+          if (typeof input.query !== 'string') throw new TypeError('GEMINI_SEARCH_QUERY_REQUIRED');
+          return geminiGoogleSearch(input.query);
+        case 'gemini.code_execution':
+          if (typeof input.instruction !== 'string') throw new TypeError('GEMINI_CODE_INSTRUCTION_REQUIRED');
+          return geminiCodeExecution(input.instruction);
+        case 'gemini.url_context': {
+          const urls = Array.isArray(input.urls) ? input.urls.filter((value): value is string => typeof value === 'string') : [];
+          if (urls.length === 0 || typeof input.question !== 'string') throw new TypeError('GEMINI_URL_CONTEXT_INPUT_REQUIRED');
+          return geminiUrlContext(urls, input.question);
+        }
+        case 'gemini.embed':
+          if (typeof input.text !== 'string') throw new TypeError('GEMINI_EMBED_TEXT_REQUIRED');
+          return geminiEmbed(input.text);
+        default:
+          throw new Error('N05_GEMINI_CAPABILITY_UNSUPPORTED:' + request.capability);
+      }
+    },
+  };
+  agents.register(geminiAgent);
+  for (const capability of geminiAgent.capabilities) {
+    gateway.register(capability, (request) => agents.execute(request), N05_OWNERSHIP['gemini.']);
   }
 
   const collaborationAgent: N05Agent = {
