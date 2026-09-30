@@ -27,6 +27,7 @@ type ModelProfile = {
   relativeLatency: number;
   quality: number;
   reasoningCapacity: number;
+  available: () => boolean;
 };
 
 const MODEL_PROFILES: readonly ModelProfile[] = [
@@ -36,6 +37,7 @@ const MODEL_PROFILES: readonly ModelProfile[] = [
     relativeLatency: 1,
     quality: 0.65,
     reasoningCapacity: 0.55,
+    available: () => true,
   },
   {
     model: 'chat-model-reasoning',
@@ -43,6 +45,15 @@ const MODEL_PROFILES: readonly ModelProfile[] = [
     relativeLatency: 2,
     quality: 0.9,
     reasoningCapacity: 0.95,
+    available: () => true,
+  },
+  {
+    model: 'gemini-n02',
+    relativeCost: 2,
+    relativeLatency: 2,
+    quality: 0.9,
+    reasoningCapacity: 0.9,
+    available: () => Boolean(process.env.SOUL_MESH_N02_URL?.trim()),
   },
 ];
 
@@ -67,6 +78,7 @@ export class N05ModelRouter {
     const requested = constraints.requestedModel;
 
     const candidates = MODEL_PROFILES
+      .filter(profile => profile.available())
       .filter(profile => !requested || profile.model === requested)
       .map(profile => {
         const reasoningFit = 1 - Math.abs(profile.reasoningCapacity - complexity);
