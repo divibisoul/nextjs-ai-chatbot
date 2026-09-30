@@ -20,6 +20,12 @@ export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'document-processing',version:'1.0',description:'Document services',request:true,response:true,events:true,owner:'N05',execution:'tool' },
   { id:'context-orchestration',version:'1.0',description:'Context-aware orchestration for N05',request:true,response:true,events:true,owner:'N05',execution:'orchestration' },
   { id:'streaming',version:'1.0',description:'Streaming-capable AI response services',request:true,response:true,events:true,owner:'N05',execution:'cognitive' },
+  { id:'gemini.google_search',version:'1.0',description:'Gemini Google Search grounding with real-time web evidence and citations',request:true,response:true,events:false,owner:'N05',execution:'tool' },
+  { id:'gemini.code_execution',version:'1.0',description:'Gemini Python code execution for calculation and verification',request:true,response:true,events:false,owner:'N05',execution:'tool' },
+  { id:'gemini.url_context',version:'1.0',description:'Gemini URL Context retrieval for supplied HTTP(S) resources',request:true,response:true,events:false,owner:'N05',execution:'tool' },
+  { id:'gemini.embed',version:'1.0',description:'Gemini semantic embedding generation for memory and learning retrieval',request:true,response:true,events:false,owner:'N05',execution:'tool' },
+  { id:'gemini.learning.assess',version:'1.0',description:'Gemini function-call assessment boundary for evidence-backed N07 learning feedback',request:true,response:true,events:true,owner:'N05',execution:'orchestration' },
+
   { id:'mesh.health',version:'1.1',description:'N01 runtime and transport health',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'mesh.capabilities',version:'1.1',description:'N01 executable capability discovery',request:true,response:true,events:true,owner:'N01',execution:'remote' },
   { id:'cognitive.intent',version:'1.0',description:'N01 cognitive intent analysis',request:true,response:true,events:false,owner:'N01',execution:'remote' },
