@@ -9,6 +9,15 @@ import {
   geminiUrlContext,
 } from './GeminiToolset';
 
+function withFakeGeminiKey() {
+  const previous = process.env.GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY = 'test-gemini-key';
+  return () => {
+    if (previous === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previous;
+  };
+}
+
 function installFetch(handler: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const original = globalThis.fetch;
   globalThis.fetch = handler as typeof fetch;
@@ -23,6 +32,7 @@ async function executeTool(execute: unknown, input: unknown): Promise<unknown> {
 }
 
 test('Gemini search extracts model text and URL citations and records evidence', async () => {
+  const restoreKey = withFakeGeminiKey();
   const restore = installFetch(async (_input, _init) =>
     new Response(
       JSON.stringify({
@@ -67,6 +77,7 @@ test('Gemini search extracts model text and URL citations and records evidence',
     assert.equal(ledger.get(toolResult.evidenceId)?.hash, toolResult.evidenceHash);
   } finally {
     restore();
+    restoreKey();
   }
 });
 
@@ -88,6 +99,7 @@ test('Gemini URL context rejects non-http URLs before network access', async () 
 });
 
 test('Gemini embeddings reject malformed vector dimensions', async () => {
+  const restoreKey = withFakeGeminiKey();
   const restore = installFetch(async () =>
     new Response(
       JSON.stringify({
@@ -103,6 +115,7 @@ test('Gemini embeddings reject malformed vector dimensions', async () => {
     );
   } finally {
     restore();
+    restoreKey();
   }
 });
 
@@ -122,6 +135,7 @@ test('Learning feedback requires evidence generated in the same ledger', async (
 
 
 test('Gemini learning assessment requires a structured function call and uses its result', async () => {
+  const restoreKey = withFakeGeminiKey();
   const calls: unknown[] = [];
   const restore = installFetch(async (input, init) => {
     const body = init?.body ? JSON.parse(String(init.body)) : {};
