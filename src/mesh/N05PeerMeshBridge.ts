@@ -10,6 +10,12 @@ const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 const envKey=(p:NucleusId)=>`SOUL_MESH_${p}_URL`;
 const normalize=(u:string)=>u.replace(/\/+$/,'');
 
+
+function cryptographicJitter(maxExclusive:number):number{
+ const values=new Uint32Array(1);
+ globalThis.crypto.getRandomValues(values);
+ return maxExclusive>0?Math.floor((values[0]/4294967296)*maxExclusive):0;
+}
 export class N05PeerMeshBridge {
  private readonly peers=new Map<NucleusId,PeerState>();
  private readonly timeoutMs:number;
@@ -52,7 +58,7 @@ export class N05PeerMeshBridge {
     const routed=await this.transportRouter.send(peer,envelope,controller.signal);
     state.healthy=true;state.failures=0;state.latencyMs=Date.now()-started;
     return{peer,payload:(routed.result as {payload:unknown}).payload,status:(routed.result as {status:number}).status,latencyMs:state.latencyMs,attempt,transport:routed.name};
-   }catch(error){last=error;state.failures++;state.healthy=false;if(state.failures>=5)state.openedUntil=Date.now()+60000;if(attempt<this.retries)await sleep(150*(2**attempt)+Math.floor(Math.random()*100));}
+   }catch(error){last=error;state.failures++;state.healthy=false;if(state.failures>=5)state.openedUntil=Date.now()+60000;if(attempt<this.retries)await sleep(150*(2**attempt)+cryptographicJitter(100));}
    finally{clearTimeout(timer);}
   }
   throw last instanceof Error?last:new Error(`PEER_REQUEST_FAILED:${peer}`);
