@@ -17,6 +17,11 @@ function installFetch(handler: (input: RequestInfo | URL, init?: RequestInit) =>
   };
 }
 
+async function executeTool(execute: unknown, input: unknown): Promise<unknown> {
+  if (typeof execute !== 'function') throw new Error('TEST_TOOL_EXECUTE_MISSING');
+  return (execute as (args: unknown, options: unknown) => Promise<unknown>)(input, {});
+}
+
 test('Gemini search extracts model text and URL citations and records evidence', async () => {
   const restore = installFetch(async (_input, _init) =>
     new Response(
@@ -54,9 +59,9 @@ test('Gemini search extracts model text and URL citations and records evidence',
 
     const ledger = new GeminiEvidenceLedger();
     const tools = createN05GeminiTools(ledger, 'corr-test');
-    const toolResult = await tools.geminiGoogleSearch.execute({
+    const toolResult = await executeTool(tools.geminiGoogleSearch.execute, {
       query: 'current test query',
-    });
+    }) as { evidenceId: string; evidenceType: string; evidenceHash: string };
     assert.match(toolResult.evidenceId, /^gemini-evidence:google_search:/);
     assert.equal(toolResult.evidenceType, 'google_search');
     assert.equal(ledger.get(toolResult.evidenceId)?.hash, toolResult.evidenceHash);
@@ -106,7 +111,7 @@ test('Learning feedback requires evidence generated in the same ledger', async (
   const tools = createN05GeminiTools(ledger, 'corr-feedback');
   await assert.rejects(
     () =>
-      tools.n07LearningFeedback.execute({
+      executeTool(tools.n07LearningFeedback.execute, {
         evidenceId: 'missing',
         target: 'N07',
         capability: 'neural.forward',
@@ -149,11 +154,9 @@ test('Gemini learning assessment requires a structured function call and uses it
       citations: [{ title: 'Source', url: 'https://example.com/source' }],
     });
     const tools = createN05GeminiTools(ledger, 'corr-assess');
-    const originalBridge = globalThis.fetch;
-
     await assert.rejects(
       () =>
-        tools.n07LearningFeedback.execute({
+        executeTool(tools.n07LearningFeedback.execute, {
           evidenceId: evidence.id,
           target: 'N07',
           capability: 'gemini.test',
@@ -166,7 +169,6 @@ test('Gemini learning assessment requires a structured function call and uses it
     const declaredTools = request.tools as Array<Record<string, unknown>>;
     assert.equal(declaredTools[0]?.type, 'function');
     assert.equal(declaredTools[0]?.name, 'emit_learning_assessment');
-    globalThis.fetch = originalBridge;
   } finally {
     restore();
   }
