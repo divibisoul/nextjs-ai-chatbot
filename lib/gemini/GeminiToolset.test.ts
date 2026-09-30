@@ -185,5 +185,6 @@ test('Gemini learning assessment requires a structured function call and uses it
     assert.equal(declaredTools[0]?.name, 'emit_learning_assessment');
   } finally {
     restore();
+    restoreKey();
   }
 });
