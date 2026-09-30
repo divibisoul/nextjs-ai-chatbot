@@ -54,3 +54,49 @@ test('N05 exposes additive SARA operations beyond chat cycle', async () => {
     else process.env.SARA_API_TOKEN = oldToken;
   }
 });
+
+
+test('N05 propagates a federated SARA context without dropping cycle correlation', async () => {
+  const oldFetch = globalThis.fetch;
+  const previousBase = process.env.SARA_BASE_URL;
+  const previousToken = process.env.SARA_API_TOKEN;
+  process.env.SARA_BASE_URL = 'https://sara.test';
+  process.env.SARA_API_TOKEN = 'token';
+  let seen: any = null;
+
+  globalThis.fetch = async (_input, init) => {
+    seen = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({
+      cycle_id: 'cycle-context',
+      final_state: 'ok',
+      converged: true,
+      rollback_performed: false,
+      execution_report: {},
+      trace_hash: 'hash-context',
+      probabilistic: { observed: true },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json', 'X-Correlation-ID': 'corr-context' },
+    });
+  };
+
+  try {
+    const { saraCycle } = await import('./SARAClient');
+    const result = await saraCycle('use shared context', 'corr-context', {
+      session_id: 'session-1',
+      client: 'n05',
+      pipeline: { selected_chat_model: 'model-x' },
+      probabilistic: { observed: true },
+    });
+    assert.equal(seen.cycle_id, 'corr-context');
+    assert.equal(seen.context.client, 'n05');
+    assert.equal(seen.context.pipeline.selected_chat_model, 'model-x');
+    assert.deepEqual(seen.context.probabilistic, { observed: true });
+    assert.equal(result.cycle_id, 'cycle-context');
+    assert.deepEqual(result.probabilistic, { observed: true });
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (previousBase === undefined) delete process.env.SARA_BASE_URL; else process.env.SARA_BASE_URL = previousBase;
+    if (previousToken === undefined) delete process.env.SARA_API_TOKEN; else process.env.SARA_API_TOKEN = previousToken;
+  }
+});
