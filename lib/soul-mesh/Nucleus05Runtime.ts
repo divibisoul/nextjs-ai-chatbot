@@ -51,6 +51,31 @@ export function createNucleus05Runtime(extra: Record<string, N05CapabilityHandle
   return new Nucleus05Runtime().registerMany({
     'ai.infer': executeSoulInference,
     conversation: executeSoulInference,
+    'gemini.google_search': async (request) => {
+      if (!request.payload || typeof request.payload !== 'object') throw new TypeError('GEMINI_SEARCH_PAYLOAD_REQUIRED');
+      const query = (request.payload as Record<string, unknown>).query;
+      if (typeof query !== 'string') throw new TypeError('GEMINI_SEARCH_QUERY_REQUIRED');
+      return geminiGoogleSearch(query);
+    },
+    'gemini.code_execution': async (request) => {
+      if (!request.payload || typeof request.payload !== 'object') throw new TypeError('GEMINI_CODE_PAYLOAD_REQUIRED');
+      const instruction = (request.payload as Record<string, unknown>).instruction;
+      if (typeof instruction !== 'string') throw new TypeError('GEMINI_CODE_INSTRUCTION_REQUIRED');
+      return geminiCodeExecution(instruction);
+    },
+    'gemini.url_context': async (request) => {
+      if (!request.payload || typeof request.payload !== 'object') throw new TypeError('GEMINI_URL_PAYLOAD_REQUIRED');
+      const payload = request.payload as Record<string, unknown>;
+      const urls = Array.isArray(payload.urls) ? payload.urls.filter((value): value is string => typeof value === 'string') : [];
+      if (urls.length === 0 || typeof payload.question !== 'string') throw new TypeError('GEMINI_URL_CONTEXT_INPUT_REQUIRED');
+      return geminiUrlContext(urls, payload.question);
+    },
+    'gemini.embed': async (request) => {
+      if (!request.payload || typeof request.payload !== 'object') throw new TypeError('GEMINI_EMBED_PAYLOAD_REQUIRED');
+      const value = (request.payload as Record<string, unknown>).text;
+      if (typeof value !== 'string') throw new TypeError('GEMINI_EMBED_TEXT_REQUIRED');
+      return geminiEmbed(value);
+    },
     ...extra,
   });
 }
