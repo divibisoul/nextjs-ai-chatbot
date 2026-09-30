@@ -19,3 +19,24 @@ test('N05 N07 bridge emits canonical request and verifies canonical response HMA
  try{const r=await new N07NeuralBridge('N05',{baseUrl:'https://n07.test',secret}).forward([2,3],'corr-n05');assert.equal(r.correlationId,'corr-n05');assert.deepEqual(r.payload,[4,9]);}
  finally{globalThis.fetch=old;}
 });
+
+test('N05 consumes canonical N07 neural parameters without changing forward/learn contracts',async()=>{
+ const old=globalThis.fetch;
+ globalThis.fetch=async(_input,init)=>{
+  const body=JSON.parse(String(init?.body));
+  assert.equal(body.capability,'neural.parameters');
+  assert.deepEqual(body.payload,{values:[]});
+  const response={protocol:'soul-mesh/1',contractVersion:'1.1.0',id:'n07-parameters',correlationId:body.correlationId,source:'N07',target:'N05',kind:'response',capability:body.capability,payload:{},timestamp:Date.now(),metadata:{parameters:JSON.stringify({size:8,learning_rate:0.05,optimizer:'adam',regularization:0.000001,gradient_clip:1,heads:1,batch_cache:128,layers:[{activation:'tanh',dropout_rate:0}]})}};
+  const nonce='response-parameters';
+  const unsigned=JSON.stringify({version:'1.0',contractVersion:'1.1.0',messageId:response.id,source:'N07',target:'N05',timestamp:response.timestamp,nonce,correlationId:response.correlationId,type:'TASK_RESULT',payload:{capability:response.capability,payload:response.payload}});
+  const sig=hmac(unsigned);
+  return new Response(JSON.stringify({...response,nonce,hmac:sig}),{status:200,headers:{'content-type':'application/json','x-soul-mesh-nonce':nonce,'x-soul-mesh-hmac':sig}});
+ };
+ try{
+  const bridge=new N07NeuralBridge('N05',{baseUrl:'https://n07.test',secret});
+  const params=await bridge.parameters('corr-parameters');
+  assert.equal(params.size,8);
+  assert.equal(params.optimizer,'adam');
+  assert.equal(params.layers[0].activation,'tanh');
+ }finally{globalThis.fetch=old;}
+});
