@@ -38,6 +38,7 @@ import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
 import { extractMessageText, saraChatEnabled, saraConfigured, saraCycle } from '@/lib/sara/SARAClient';
+import { createN05GeminiTools, GeminiEvidenceLedger } from '@/lib/gemini/GeminiToolset';
 
 export const maxDuration = 60;
 
@@ -172,6 +173,14 @@ export async function POST(request: Request) {
       }
     }
 
+    const geminiEnabled = Boolean(
+      (process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? '').trim(),
+    );
+    const geminiEvidence = new GeminiEvidenceLedger();
+    const geminiTools = geminiEnabled
+      ? createN05GeminiTools(geminiEvidence, id + ':gemini')
+      : {};
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const result = streamText({
@@ -192,6 +201,15 @@ export async function POST(request: Request) {
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
+                  ...(geminiEnabled
+                    ? [
+                        'geminiGoogleSearch',
+                        'geminiCodeExecution',
+                        'geminiUrlContext',
+                        'geminiEmbed',
+                        'n07LearningFeedback',
+                      ]
+                    : []),
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
@@ -202,6 +220,7 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            ...geminiTools,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
