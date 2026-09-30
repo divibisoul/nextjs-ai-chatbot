@@ -121,7 +121,7 @@
     "overrides": {
       "sharp": "0.35.4",
       "js-yaml": "4.3.2",
-      "brace-expansion": "1.1.20",
+      "brace-expansion": "1.1.21",
       "nanoid@3.3.9": "3.3.19",
       "postcss": "8.5.28",
       "playwright": "1.63.0",
