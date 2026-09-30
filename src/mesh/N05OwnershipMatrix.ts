@@ -14,6 +14,7 @@ export const N05_OWNERSHIP: Record<string,OwnershipRule> = {
   'tool.': { owner:'N04', consumers:['N01','N02','N03','N05','N06','N07'], fallback:['N06'] },
   'support.': { owner:'N06', consumers:['N05','N07'], fallback:['N05'] },
   'gemini.': { owner:'N05', consumers:['N01','N02','N03','N04','N06','N07'], fallback:['N02'] },
+  'memory.': { owner:'N07', consumers:['N01','N02','N03','N04','N05','N06'], fallback:['N05'] },
 };
 
 export function ownershipFor(capability:string){return Object.entries(N05_OWNERSHIP).find(([prefix])=>capability.startsWith(prefix))?.[1];}
