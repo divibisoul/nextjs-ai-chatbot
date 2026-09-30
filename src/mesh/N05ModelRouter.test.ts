@@ -31,3 +31,20 @@ test('N05 rejects unavailable model requests', () => {
     /N05_REQUESTED_MODEL_UNAVAILABLE/,
   );
 });
+
+test('N05 exposes Gemini N02 only when the real N02 endpoint is configured', () => {
+  const previous = process.env.SOUL_MESH_N02_URL;
+  delete process.env.SOUL_MESH_N02_URL;
+  assert.throws(
+    () => n05ModelRouter.route({ requestedModel: 'gemini-n02' }),
+    /N05_REQUESTED_MODEL_UNAVAILABLE/,
+  );
+
+  process.env.SOUL_MESH_N02_URL = 'https://n02.example.invalid';
+  const route = n05ModelRouter.route({ requestedModel: 'gemini-n02' });
+  assert.equal(route.model, 'gemini-n02');
+
+  if (previous === undefined) delete process.env.SOUL_MESH_N02_URL;
+  else process.env.SOUL_MESH_N02_URL = previous;
+});
+
