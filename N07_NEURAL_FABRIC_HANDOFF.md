@@ -9,3 +9,13 @@ Preserve correlationId, finite numeric payloads, nonce/HMAC, deadlines and expli
 WHAT_CHANGED: N05 joined the shared N07 Neural Fabric contract.
 WHAT_REMAINS: exact-head CI and live bidirectional commissioning.
 WHAT_NEXT_AGENT_SHOULD_DO: keep N05 ownership intact and invoke N07 instead of cloning neural runtime code.
+
+
+## Orbital reasoning / Prefrontal consumer contract — 2026-10-01
+
+This nucleus remains the owner of its native agents and tools. It may consume the N07 canonical capabilities through the existing Soul Mesh when the runtime needs resource simulation or risk-bearing admission:
+
+- `transcendental.estimate@1.0.0` — N07 TCE deterministic resource simulation; simulation evidence only, never physical-hardware evidence.
+- `prefrontal.orbital.evaluate@1.0.0` — N07 TCE evidence combined with the canonical Prefrontal admission boundary.
+
+The local agent/tool must preserve the existing `correlationId`, `traceId`, Mesh authentication/deadline contract and its own ownership. This is a consumer path, not a copied TCE/Prefrontal runtime.
