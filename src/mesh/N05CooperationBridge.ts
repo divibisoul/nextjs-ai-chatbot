@@ -32,7 +32,7 @@ export async function n05CooperationHandshake(
     correlationId,
     traceId,
   );
-  return result.payload;
+  return (result.payload as { payload?: unknown })?.payload ?? result.payload;
 }
 
 export async function n05CooperationExchange(
@@ -57,5 +57,5 @@ export async function n05CooperationExchange(
     correlationId,
     traceId,
   );
-  return result.payload;
+  return (result.payload as { payload?: unknown })?.payload ?? result.payload;
 }
