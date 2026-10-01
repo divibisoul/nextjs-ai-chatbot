@@ -38,6 +38,7 @@ export async function saraCycle(input: string, cycleId?: string, context?: SaraF
   rollback_performed: boolean;
   execution_report: Record<string, unknown>;
   trace_hash: string;
+  probabilistic?: Record<string, unknown>;
 }> {
   if (!saraConfigured()) throw new Error('SARA_NOT_CONFIGURED');
   if (!input.trim()) throw new Error('SARA_INPUT_REQUIRED');
