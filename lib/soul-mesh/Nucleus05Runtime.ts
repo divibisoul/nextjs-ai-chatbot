@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { executeSoulInference } from './SoulMeshAI';
 import { geminiCodeExecution, geminiEmbed, geminiGoogleSearch, geminiUrlContext } from '@/lib/gemini/GeminiToolset';
 import { N05MeshGateway, type N05CapabilityHandler, type N05GatewayRequest, type N05GatewayResponse } from './N05MeshGateway';
+import { delegateN05ExternalCapability } from '@/src/mesh/N05ExternalCapabilityBridge';
 
 export type { N05CapabilityHandler };
 
@@ -50,6 +51,19 @@ export class Nucleus05Runtime {
 
 export function createNucleus05Runtime(extra: Record<string, N05CapabilityHandler> = {}) {
   return new Nucleus05Runtime().registerMany({
+    'external-capability-execution': async (payload) => {
+      if (!payload || typeof payload !== 'object') throw new TypeError('N05_EXTERNAL_CAPABILITY_PAYLOAD_REQUIRED');
+      const input = payload as Record<string, unknown>;
+      return delegateN05ExternalCapability({
+        capability: String(input.capability ?? ''),
+        payload: input.payload,
+        correlationId: String(input.correlationId ?? crypto.randomUUID()),
+        traceId: typeof input.traceId === 'string' ? input.traceId : undefined,
+        workloads: Array.isArray(input.workloads) ? input.workloads : [],
+        candidate: input.candidate && typeof input.candidate === 'object' ? input.candidate as Record<string, unknown> : { capability: String(input.capability ?? '') },
+        strategy: typeof input.strategy === 'string' ? input.strategy : undefined,
+      });
+    },
     'ai.infer': executeSoulInference,
     conversation: executeSoulInference,
     'gemini.google_search': async (payload) => {
