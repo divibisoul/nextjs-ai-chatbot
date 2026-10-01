@@ -45,10 +45,19 @@ export class N05PeerMeshBridge {
    return {status:response.status,payload:body};
   });
  }
+ private ensurePeer(peer:NucleusId):PeerState {
+  const existing=this.peers.get(peer);
+  if(existing) return existing;
+  const url=process.env[envKey(peer)]?.trim();
+  if(!url) throw new Error(`PEER_NOT_CONFIGURED:${peer}`);
+  const state:PeerState={url:normalize(url),healthy:false,failures:0,latencyMs:null,openedUntil:0};
+  this.peers.set(peer,state);
+  return state;
+ }
  configuredPeers(){return [...this.peers.keys()];}
  transportSnapshot(){return this.transportRouter.snapshot();}
  async request(peer:NucleusId,capability:string,payload:unknown,correlationId:string=randomUUID(),traceId:string=randomUUID()){
-  const state=this.peers.get(peer);if(!state)throw new Error(`PEER_NOT_CONFIGURED:${peer}`);if(state.openedUntil>Date.now())throw new Error(`PEER_CIRCUIT_OPEN:${peer}`);
+  const state=this.ensurePeer(peer);if(state.openedUntil>Date.now())throw new Error(`PEER_CIRCUIT_OPEN:${peer}`);
   let last:unknown;
   for(let attempt=0;attempt<=this.retries;attempt++){
    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),this.timeoutMs);const started=Date.now();
