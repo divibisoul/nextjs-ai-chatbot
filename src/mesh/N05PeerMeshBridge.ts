@@ -47,7 +47,7 @@ export class N05PeerMeshBridge {
  }
  configuredPeers(){return [...this.peers.keys()];}
  transportSnapshot(){return this.transportRouter.snapshot();}
- async request(peer:NucleusId,capability:string,payload:unknown,correlationId=randomUUID(),traceId=randomUUID()){
+ async request(peer:NucleusId,capability:string,payload:unknown,correlationId:string=randomUUID(),traceId:string=randomUUID()){
   const state=this.peers.get(peer);if(!state)throw new Error(`PEER_NOT_CONFIGURED:${peer}`);if(state.openedUntil>Date.now())throw new Error(`PEER_CIRCUIT_OPEN:${peer}`);
   let last:unknown;
   for(let attempt=0;attempt<=this.retries;attempt++){
