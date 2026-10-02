@@ -58,9 +58,9 @@ export async function retrieveWithLlamaIndex(request: LlamaIndexRequest): Promis
   const evidence = describeLlamaIndexAdapter();
   if (!evidence.enabled || !evidence.sourcePresent || !evidence.credentialsPresent) return { ...evidence, capability: LLAMA_INDEX_CAPABILITY };
   const query = request.query.trim();
-  if (!query) return { state:'FAIL', code:'LLAMA_INDEX_QUERY_REQUIRED', capability:LLAMA_INDEX_CAPABILITY, ...evidence };
+  if (!query) return { ...evidence, state:'FAIL', code:'LLAMA_INDEX_QUERY_REQUIRED', capability:LLAMA_INDEX_CAPABILITY };
   const c = config();
-  if (!Array.isArray(request.documents) || request.documents.length === 0) return { state:'FAIL', code:'LLAMA_INDEX_DOCUMENTS_REQUIRED', capability:LLAMA_INDEX_CAPABILITY, ...evidence };
+  if (!Array.isArray(request.documents) || request.documents.length === 0) return { ...evidence, state:'FAIL', code:'LLAMA_INDEX_DOCUMENTS_REQUIRED', capability:LLAMA_INDEX_CAPABILITY };
   if (request.documents.length > c.maxDocuments) return { ...evidence, state:'FAIL', code:'LLAMA_INDEX_TOO_MANY_DOCUMENTS', maxDocuments:c.maxDocuments, capability:LLAMA_INDEX_CAPABILITY };
 
   const payload = JSON.stringify({
