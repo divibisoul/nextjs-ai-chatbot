@@ -1,0 +1,252 @@
+{
+  "schema_version": "1.0.0",
+  "graph": "SOUL-25-capability-fabric",
+  "component_id": "N05",
+  "component_repository": "divibisoul/nextjs-ai-chatbot",
+  "native_authority": "preserved",
+  "access_model": "All 16 upstream capability sources are discoverable through canonical N07; direct-affinity providers are preferred for this component.",
+  "external_provider_count": 16,
+  "external_providers": [
+    {
+      "id": "superpowers",
+      "capabilities": [
+        "agentic-skills",
+        "subagents",
+        "planning",
+        "tdd",
+        "review",
+        "debugging"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "superagi",
+      "capabilities": [
+        "autonomous-agents",
+        "tools",
+        "memory",
+        "multimodal",
+        "telemetry"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "langgraph",
+      "capabilities": [
+        "stateful-agents",
+        "durable-workflows",
+        "orchestration"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "crewai",
+      "capabilities": [
+        "multi-agent-crews",
+        "flows",
+        "role-specialization"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "microsoft-agent-framework",
+      "capabilities": [
+        "agents",
+        "workflows",
+        "MCP",
+        "A2A"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "openhands",
+      "capabilities": [
+        "software-agents",
+        "tool-use",
+        "execution"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "metagpt",
+      "capabilities": [
+        "role-based-agents",
+        "multi-agent-collaboration",
+        "software-process"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "agentscope",
+      "capabilities": [
+        "agents",
+        "teams",
+        "tools",
+        "memory",
+        "sandbox",
+        "A2A",
+        "voice"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "letta-code",
+      "capabilities": [
+        "stateful-agents",
+        "persistent-memory",
+        "identity"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "browser-use",
+      "capabilities": [
+        "browser-agents",
+        "web-automation"
+      ],
+      "direct_affinity": true,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "smolagents",
+      "capabilities": [
+        "code-agents",
+        "tools",
+        "MCP",
+        "multimodal"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "pydantic-ai",
+      "capabilities": [
+        "typed-agents",
+        "tools",
+        "subagents",
+        "durable-execution"
+      ],
+      "direct_affinity": true,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "llama-index",
+      "capabilities": [
+        "RAG",
+        "indexing",
+        "retrieval",
+        "agent-workflows"
+      ],
+      "direct_affinity": true,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "dspy",
+      "capabilities": [
+        "LM-programming",
+        "optimization",
+        "reasoning-pipelines"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "whisper",
+      "capabilities": [
+        "speech-to-text"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    },
+    {
+      "id": "kokoro",
+      "capabilities": [
+        "text-to-speech"
+      ],
+      "direct_affinity": false,
+      "access": "N07 canonical federation",
+      "structural_state": "REAL",
+      "runtime_state": "PROJECTED",
+      "requires_adapter": true
+    }
+  ],
+  "soul_peer_count": 9,
+  "soul_peers": [
+    "divibisoul/aeternum-core-29",
+    "divibisoul/Eternium-",
+    "divibisoul/nexus-aeternum-fusion",
+    "divibisoul/nextjs-ai-chatbots",
+    "divibisoul/nextjs-ai-chatbot",
+    "divibisoul/nextjs-ai-chatbot-2000",
+    "divibisoul/Orquestrador-",
+    "divibisoul/SARA",
+    "divibisoul/jev-api"
+  ],
+  "engineering_agents": {
+    "default": [
+      "soul.engineer.adapter",
+      "soul.engineer.runtime",
+      "soul.engineer.verification",
+      "soul.engineer.resilience"
+    ],
+    "component": [
+      "soul.engineer.runtime",
+      "soul.engineer.verification"
+    ]
+  },
+  "rule": "External capabilities reinforce native SOUL functions; they do not replace ownership. Runtime success requires real adapter/configuration/evidence."
+}
