@@ -1,0 +1,23 @@
+name: SOUL Integration CI - N05
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Validate SOUL identity
+        run: test -s SOUL_ECOSYSTEM.md
+      - name: Validate submodules
+        shell: bash
+        run: |
+          set -e
+          if test -f .gitmodules; then
+            git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}' | while read p; do test -e "$p"; done
+          fi
