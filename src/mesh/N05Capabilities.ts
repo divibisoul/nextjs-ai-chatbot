@@ -122,7 +122,7 @@ export function createN05CapabilityGateway() {
     },
   };
   agents.register(retrievalAgent);
-  gateway.register('retrieval.llama-index@1.0.0', (request) => agents.execute(request), N05_OWNERSHIP['inference.']);
+  gateway.register('retrieval.llama-index@1.0.0', (request) => agents.execute(request), N05_OWNERSHIP['retrieval.']);
 
   const collaborationAgent: N05Agent = {
     id: 'N05-n06-collaboration-agent',
