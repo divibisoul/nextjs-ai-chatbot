@@ -61,7 +61,7 @@ export async function retrieveWithLlamaIndex(request: LlamaIndexRequest): Promis
   if (!query) return { state:'FAIL', code:'LLAMA_INDEX_QUERY_REQUIRED', capability:LLAMA_INDEX_CAPABILITY, ...evidence };
   const c = config();
   if (!Array.isArray(request.documents) || request.documents.length === 0) return { state:'FAIL', code:'LLAMA_INDEX_DOCUMENTS_REQUIRED', capability:LLAMA_INDEX_CAPABILITY, ...evidence };
-  if (request.documents.length > c.maxDocuments) return { state:'FAIL', code:'LLAMA_INDEX_TOO_MANY_DOCUMENTS', maxDocuments:c.maxDocuments, capability:LLAMA_INDEX_CAPABILITY, ...evidence };
+  if (request.documents.length > c.maxDocuments) return { ...evidence, state:'FAIL', code:'LLAMA_INDEX_TOO_MANY_DOCUMENTS', maxDocuments:c.maxDocuments, capability:LLAMA_INDEX_CAPABILITY };
 
   const payload = JSON.stringify({
     root:c.root,
@@ -86,13 +86,13 @@ export async function retrieveWithLlamaIndex(request: LlamaIndexRequest): Promis
 
   if ('error' in result && result.error) {
     const message=result.error instanceof Error?result.error.message:String(result.error);
-    return { state:message==='LLAMA_INDEX_TIMEOUT'?'FAIL':'DEGRADED', code:message==='LLAMA_INDEX_TIMEOUT'?'LLAMA_INDEX_TIMEOUT':'LLAMA_INDEX_PROCESS_UNAVAILABLE', detail:message, stderr:stderr.slice(-4000), capability:LLAMA_INDEX_CAPABILITY, ...evidence };
+    return { ...evidence, state:message==='LLAMA_INDEX_TIMEOUT'?'FAIL':'DEGRADED', code:message==='LLAMA_INDEX_TIMEOUT'?'LLAMA_INDEX_TIMEOUT':'LLAMA_INDEX_PROCESS_UNAVAILABLE', detail:message, stderr:stderr.slice(-4000), capability:LLAMA_INDEX_CAPABILITY };
   }
-  if (result.code !== 0) return { state:'FAIL', code:'LLAMA_INDEX_PROCESS_FAILED', exitCode:result.code, signal:result.signal, stderr:stderr.slice(-4000), capability:LLAMA_INDEX_CAPABILITY, ...evidence };
+  if (result.code !== 0) return { ...evidence, state:'FAIL', code:'LLAMA_INDEX_PROCESS_FAILED', exitCode:result.code, signal:result.signal, stderr:stderr.slice(-4000), capability:LLAMA_INDEX_CAPABILITY };
   try {
     const output=JSON.parse(stdout.trim()) as Record<string,unknown>;
     return { ...output, capability:LLAMA_INDEX_CAPABILITY, providerRevision:LLAMA_INDEX_REVISION };
   } catch {
-    return { state:'FAIL', code:'LLAMA_INDEX_INVALID_RUNNER_OUTPUT', stdout:stdout.slice(-4000), stderr:stderr.slice(-4000), capability:LLAMA_INDEX_CAPABILITY, ...evidence };
+    return { ...evidence, state:'FAIL', code:'LLAMA_INDEX_INVALID_RUNNER_OUTPUT', stdout:stdout.slice(-4000), stderr:stderr.slice(-4000), capability:LLAMA_INDEX_CAPABILITY };
   }
 }
