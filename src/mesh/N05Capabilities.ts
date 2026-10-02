@@ -8,6 +8,7 @@ import type { N05Agent } from './N05AgentContract';
 import type { SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
 import { sendToNucleus } from '@/lib/soul-mesh/adapter';
 import { geminiCodeExecution, geminiEmbed, geminiGoogleSearch, geminiUrlContext } from '@/lib/gemini/GeminiToolset';
+import { retrieveWithLlamaIndex, type LlamaIndexRequest } from '@/lib/soul-mesh/LlamaIndexAdapter';
 
 const systems: Record<string, string> = {
   'inference.reason': 'You are N05, the Soul inference engine. Reason precisely and return only the requested reasoning.',
@@ -109,6 +110,19 @@ export function createN05CapabilityGateway() {
   for (const capability of geminiAgent.capabilities) {
     gateway.register(capability, (request) => agents.execute(request), N05_OWNERSHIP['gemini.']);
   }
+
+
+  const retrievalAgent: N05Agent = {
+    id: 'N05-llama-index-retrieval-agent',
+    name: 'N05 LlamaIndex Retrieval Agent',
+    capabilities: ['retrieval.llama-index@1.0.0'],
+    execute: async (request) => {
+      if (!request.payload || typeof request.payload !== 'object') throw new TypeError('N05_LLAMA_INDEX_PAYLOAD_REQUIRED');
+      return retrieveWithLlamaIndex(request.payload as LlamaIndexRequest);
+    },
+  };
+  agents.register(retrievalAgent);
+  gateway.register('retrieval.llama-index@1.0.0', (request) => agents.execute(request), N05_OWNERSHIP['inference.']);
 
   const collaborationAgent: N05Agent = {
     id: 'N05-n06-collaboration-agent',
