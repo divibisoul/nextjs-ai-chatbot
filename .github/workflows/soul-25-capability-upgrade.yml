@@ -1,0 +1,32 @@
+name: SOUL 25 Capability Upgrade - N05
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate 25-repository augmentation contract
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('integrations/soul-25-augmentation.json'))
+          assert d['external_provider_count'] == 16
+          assert len(d['external_providers']) == 16
+          assert d['soul_peer_count'] == 9
+          assert len(d['soul_peers']) == 9
+          assert d['native_authority'] == 'preserved'
+          for p in d['external_providers']:
+              assert p['id'] and p['capabilities']
+              assert p['access'] == 'N07 canonical federation'
+              assert p['structural_state'] == 'REAL'
+              assert p['runtime_state'] == 'PROJECTED'
+              assert p['requires_adapter'] is True
+          print('SOUL-25 AUGMENTATION CONTRACT: PASS')
+          PY
