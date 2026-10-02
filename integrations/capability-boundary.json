@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "component": {
+    "id": "N05",
+    "role": "chat, conhecimento e recuperação"
+  },
+  "reason": "functional-complementation",
+  "upstream_capability_sources": [
+    "llama-index",
+    "browser-use"
+  ],
+  "canonical_control_plane": "divibisoul/Orquestrador-",
+  "integration": {
+    "agent_engineering": "soul.engineer.runtime",
+    "routing": "canonical SOUL Mesh via N07",
+    "execution": "N05 RAG/browser/inference boundary",
+    "verification": "retrieval round-trip + browser capability discovery",
+    "structural_state": "REAL",
+    "runtime_state": "PROJECTED"
+  },
+  "rule": "upstream source remains independent; adapter/configuration/runtime evidence is required before EXECUTABLE"
+}
