@@ -1,0 +1,7 @@
+[submodule "integrations/soul-upstream/llama-index"]
+	path = integrations/soul-upstream/llama-index
+	url = https://github.com/run-llama/llama_index.git
+
+[submodule "integrations/soul-upstream/browser-use"]
+	path = integrations/soul-upstream/browser-use
+	url = https://github.com/browser-use/browser-use.git
