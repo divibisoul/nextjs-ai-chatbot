@@ -13,7 +13,9 @@ export const N05_RESIDENT_AGENT = {
     runtimePolicyEngine: false,
   },
   skills: ['subagent-driven-development','requesting-code-review','systematic-debugging','verification-before-completion'],
-  publishedCapabilities: ['mesh.health','mesh.discovery','mesh.resident.describe@1.0.0','chat.*','dispatch.*','browser.*','retrieval.*','retrieval.llama-index@1.0.0','mesh.supergpu.execute@1.0.0','superagi.fabric.execute@1.0.0'],
-  authority: 'N05 owns conversation dispatch/execution; Chat UX remains the existing public surface.',
+  publishedCapabilities: ['mesh.health','mesh.discovery','mesh.resident.describe@1.0.0','chat.*','dispatch.*','browser.*','retrieval.*','retrieval.llama-index@1.0.0','external.capability.resolve@1.0.0','external.capability.fabric.describe@1.0.0','mesh.supergpu.execute@1.0.0','superagi.fabric.execute@1.0.0'],
+  upstreamProviderCount: 25,
+  externalFabric: 'N05ExternalCapabilityFabric',
+  authority: 'N05 owns conversation dispatch/execution; upstream retrieval/orchestration sources amplify the native boundary.';
   evidence: 'soul-evidence/1',
 } as const;
