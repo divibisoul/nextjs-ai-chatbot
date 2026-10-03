@@ -1,0 +1,4 @@
+import { test } from 'node:test';import assert from 'node:assert/strict';import {describeN05ExternalCapabilityFabric,providersByFunction,resolveN05ExternalProvider} from './N05ExternalCapabilityFabric';
+test('N05 fabric contains 25 upstreams',()=>{const f=describeN05ExternalCapabilityFabric();assert.equal(f.providerCount,25);assert.equal(resolveN05ExternalProvider('llama-index').revision,'962940ddc079cc21701d28d1237c84c82a7c5164');assert.equal(resolveN05ExternalProvider('langgraph').canonicalOwner,'N07');});
+test('N05 affinity resolves retrieval and dispatch providers',()=>{assert.ok(providersByFunction('retrieval.llama-index@1.0.0').some(p=>p.id==='llama-index'));assert.ok(providersByFunction('dispatch.*').some(p=>p.id==='langgraph'));});
+test('unknown provider fails closed',()=>{assert.throws(()=>resolveN05ExternalProvider('unknown'),/N05_EXTERNAL_PROVIDER_UNKNOWN/);});
