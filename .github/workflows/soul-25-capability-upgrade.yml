@@ -17,8 +17,8 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('integrations/soul-25-augmentation.json'))
-          assert d['external_provider_count'] == 16
-          assert len(d['external_providers']) == 16
+          assert d['external_provider_count'] == 25
+          assert len(d['external_providers']) == 25
           assert d['soul_peer_count'] == 9
           assert len(d['soul_peers']) == 9
           assert d['native_authority'] == 'preserved'
@@ -28,5 +28,5 @@ jobs:
               assert p['structural_state'] == 'REAL'
               assert p['runtime_state'] == 'PROJECTED'
               assert p['requires_adapter'] is True
-          print('SOUL-25 AUGMENTATION CONTRACT: PASS')
+          print('SOUL-34 / 25-UPSTREAM AUGMENTATION CONTRACT: PASS')
           PY
