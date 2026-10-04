@@ -1,0 +1,46 @@
+name: P0 Readiness Runtime - N05
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Start Next.js
+        env:
+          SOUL_MESH_HMAC_SECRET: ci-readiness-secret-32-bytes-minimum
+          SOUL_MESH_TOKEN: ci-readiness-token
+        run: |
+          pnpm dev --hostname 127.0.0.1 --port 3000 > /tmp/n05.log 2>&1 &
+          echo $! > /tmp/n05.pid
+      - name: Probe /api/ready
+        run: |
+          set -euo pipefail
+          trap 'kill $(cat /tmp/n05.pid) 2>/dev/null || true' EXIT
+          for i in $(seq 1 90); do
+            code=$(curl -sS -o /tmp/ready.json -w '%{http_code}' http://127.0.0.1:3000/api/ready || true)
+            if [ "$code" = "200" ]; then
+              cat /tmp/ready.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/n05.log
+          cat /tmp/ready.json || true
+          exit 1
