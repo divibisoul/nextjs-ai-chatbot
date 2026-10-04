@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
    * authorization boundary. Do not send machine-to-machine Mesh
    * traffic through the interactive NextAuth redirect middleware.
    */
-  if (pathname === '/api/soul-mesh') {
+  if (pathname === '/api/soul-mesh' || pathname === '/api/ready') {
     return NextResponse.next();
   }
 
