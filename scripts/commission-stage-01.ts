@@ -1,16 +1,24 @@
 import { randomUUID } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
-import { createRequest } from '../lib/soul-mesh/peer-client.ts';
+import { createSoulMeshMessage } from '../lib/soul-mesh/SoulMeshProtocol.ts';
 import { createSoulMeshNonce, signSoulMeshMessage, verifySoulMeshResponse } from '../lib/soul-mesh/SoulMeshHmac.ts';
 
 const targetUrl = (process.env.SOUL_MESH_N06_URL ?? 'http://127.0.0.1:3001').replace(/\/$/, '');
 const secret = (process.env.SOUL_MESH_HMAC_SECRET ?? '').trim();
+const token = process.env.SOUL_MESH_TOKEN ?? 'ci-stage-token';
 const correlationId = process.env.SOUL_STAGE_CORRELATION_ID?.trim() || randomUUID();
 const upstream = process.env.SOUL_STAGE_UPSTREAM_RESULT ? JSON.parse(process.env.SOUL_STAGE_UPSTREAM_RESULT) : { seed: true };
-const request = createRequest('N06', 'support.context', { stage: 'N06_N05', upstream, requestedAt: new Date().toISOString() });
-request.correlationId = correlationId;
-request.meta = { ...(request.meta ?? {}), traceId: correlationId };
 if (!secret) throw new Error('STAGE01_HMAC_SECRET_REQUIRED');
+
+const request = createSoulMeshMessage({
+  source: 'N05',
+  target: 'N06',
+  kind: 'request',
+  capability: 'support.context',
+  payload: { stage: 'N06_N05', upstream, requestedAt: new Date().toISOString() },
+  correlationId,
+  meta: { runtime: 'nextjs-ai-chatbot', transport: 'HTTP', encoding: 'json', version: '1.1.0', traceId: correlationId }
+});
 const nonce = createSoulMeshNonce();
 request.nonce = nonce;
 request.meta = { ...(request.meta ?? {}), nonce };
@@ -25,7 +33,7 @@ async function main() {
       'x-soul-correlation-id': correlationId,
       'x-soul-mesh-nonce': nonce,
       'x-soul-mesh-hmac': hmac,
-      authorization: 'Bearer ' + (process.env.SOUL_MESH_TOKEN ?? 'ci-stage-token')
+      authorization: 'Bearer ' + token
     },
     body: JSON.stringify(request)
   });
