@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
-import { createRequest } from '../lib/soul-mesh/peer-client';
-import { createSoulMeshNonce, signSoulMeshMessage, verifySoulMeshResponse } from '../lib/soul-mesh/SoulMeshHmac';
+import { createRequest } from '../lib/soul-mesh/peer-client.ts';
+import { createSoulMeshNonce, signSoulMeshMessage, verifySoulMeshResponse } from '../lib/soul-mesh/SoulMeshHmac.ts';
 
 const targetUrl = (process.env.SOUL_MESH_N06_URL ?? 'http://127.0.0.1:3001').replace(/\/$/, '');
 const secret = (process.env.SOUL_MESH_HMAC_SECRET ?? '').trim();
