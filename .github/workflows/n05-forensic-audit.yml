@@ -1,0 +1,34 @@
+name: N05 Cycle 3 forensic audit
+
+on:
+  push:
+    branches:
+      - "audit/cycle3-n05-forensics-2026-09-28"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  forensic:
+    runs-on: ubuntu-22.04
+    env:
+      FORENSIC_MANIFEST: docs/forensics/n05-manifest.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Execute seven-source audit
+        run: node scripts/forensic-audit-n05.cjs
+      - run: test -s artifacts/forensic-audit-report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: n05-cycle3-forensic-audit
+          path: artifacts/forensic-audit-report.json
