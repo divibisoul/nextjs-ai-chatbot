@@ -17,7 +17,7 @@
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
     "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
-    "test:mesh": "pnpm exec tsx --test lib/soul-mesh/Nucleus05Runtime.test.ts lib/soul-mesh/SoulMeshTransportMultiplexer.test.ts src/mesh/N05MeshGateway.test.ts lib/soul-neural/N07Bridge.test.ts src/mesh/N05CooperationBridge.test.ts lib/soul-mesh/N05SuperGPUMesh.test.ts",
+    "test:mesh": "pnpm exec tsx --test lib/soul-mesh/Nucleus05Runtime.test.ts lib/soul-mesh/SoulMeshTransportMultiplexer.test.ts src/mesh/N05MeshGateway.test.ts lib/soul-neural/N07Bridge.test.ts src/mesh/N05CooperationBridge.test.ts lib/soul-mesh/N05SuperGPUMesh.test.ts lib/soul-mesh/N05ExecutionGuard.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:mesh": "tsc -p tsconfig.mesh.json --noEmit",
     "test:sara": "tsx --test lib/sara/SARAClient.test.ts",
