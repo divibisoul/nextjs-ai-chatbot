@@ -1,14 +1,20 @@
 {
   "schema_version": "1.0.0",
-  "graph": "SOUL-25-capability-fabric",
+  "graph": "SOUL-34-capability-fabric",
   "component_id": "N05",
   "component_repository": "divibisoul/nextjs-ai-chatbot",
   "native_authority": "preserved",
-  "access_model": "All 16 upstream capability sources are discoverable through canonical N07; direct-affinity providers are preferred for this component.",
-  "external_provider_count": 16,
+  "access_model": "All 25 upstream capability sources are first-class in the N05 capability fabric. Direct affinity is assigned to conversation, orchestration, retrieval, browser, reasoning and engineering capabilities; execution ownership remains native.",
+  "external_provider_count": 25,
   "external_providers": [
     {
       "id": "superpowers",
+      "source": "https://github.com/obra/superpowers",
+      "revision": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
       "capabilities": [
         "agentic-skills",
         "subagents",
@@ -17,14 +23,25 @@
         "review",
         "debugging"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "engineering.skills",
+        "workflow.execute"
+      ],
+      "directAffinity": true,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "superagi",
+      "source": "https://github.com/TransformerOptimus/SuperAGI",
+      "revision": "c3c1982e7bd6a11cfed53c5a193ea502f924b1b6",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
       "capabilities": [
         "autonomous-agents",
         "tools",
@@ -32,80 +49,150 @@
         "multimodal",
         "telemetry"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*",
+        "workflow.execute",
+        "agent-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "langgraph",
+      "source": "https://github.com/langchain-ai/langgraph",
+      "revision": "157a06dda988d85afeb8751ff27b35ab3f4f8bf4",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07",
+        "N01"
+      ],
       "capabilities": [
         "stateful-agents",
         "durable-workflows",
         "orchestration"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*",
+        "workflow.execute",
+        "agent-orchestration"
+      ],
+      "directAffinity": true,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "crewai",
+      "source": "https://github.com/crewAIInc/crewAI",
+      "revision": "8078f9130c35a47be95d4a55bf1d73b3fd44fc88",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
       "capabilities": [
         "multi-agent-crews",
         "flows",
         "role-specialization"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*",
+        "workflow.execute",
+        "agent-orchestration"
+      ],
+      "directAffinity": true,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "microsoft-agent-framework",
+      "source": "https://github.com/microsoft/agent-framework",
+      "revision": "a2f4506c0ba30cea7c9bbe907fc158c0db2cc6a3",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
       "capabilities": [
         "agents",
         "workflows",
         "MCP",
         "A2A"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*",
+        "workflow.execute",
+        "agent-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "openhands",
+      "source": "https://github.com/OpenHands/OpenHands",
+      "revision": "2414d6ee5e31bede2e78211f72b58e9949575a75",
+      "canonicalOwner": "N06",
+      "meshTargets": [
+        "N06"
+      ],
       "capabilities": [
         "software-agents",
         "tool-use",
         "execution"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "metagpt",
+      "source": "https://github.com/FoundationAgents/MetaGPT",
+      "revision": "11cdf466d042aece04fc6cfd13b28e1a70341b1f",
+      "canonicalOwner": "N06",
+      "meshTargets": [
+        "N06"
+      ],
       "capabilities": [
         "role-based-agents",
         "multi-agent-collaboration",
         "software-process"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "agentscope",
+      "source": "https://github.com/agentscope-ai/agentscope",
+      "revision": "72f3f6fa0b2fc38b8517f408ab616f0f2bd229e6",
+      "canonicalOwner": "N03",
+      "meshTargets": [
+        "N03",
+        "N07"
+      ],
       "capabilities": [
         "agents",
         "teams",
@@ -115,113 +202,427 @@
         "A2A",
         "voice"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*",
+        "workflow.execute",
+        "agent-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "letta-code",
+      "source": "https://github.com/letta-ai/letta-code",
+      "revision": "1fcc9666817ab852bc2532a3a989f712e1fd6c19",
+      "canonicalOwner": "N01",
+      "meshTargets": [
+        "N01"
+      ],
       "capabilities": [
         "stateful-agents",
         "persistent-memory",
         "identity"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "conversation.memory",
+        "context-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "browser-use",
+      "source": "https://github.com/browser-use/browser-use",
+      "revision": "302d8fcb245a7a63fb7531a4734c9ce3c7792779",
+      "canonicalOwner": "N04",
+      "meshTargets": [
+        "N04"
+      ],
       "capabilities": [
         "browser-agents",
         "web-automation"
       ],
-      "direct_affinity": true,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "browser.*",
+        "tool-execution"
+      ],
+      "directAffinity": true,
+      "state": "ADAPTER_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "ADAPTER_BOUND"
     },
     {
       "id": "smolagents",
+      "source": "https://github.com/huggingface/smolagents",
+      "revision": "c30b115286e000e98711fae5e85993547b73d826",
+      "canonicalOwner": "N06",
+      "meshTargets": [
+        "N06"
+      ],
       "capabilities": [
         "code-agents",
         "tools",
         "MCP",
         "multimodal"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "dispatch.*"
+      ],
+      "directAffinity": true,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "pydantic-ai",
+      "source": "https://github.com/pydantic/pydantic-ai",
+      "revision": "6bc07cf18b0641ea92343d8c589cfb922108b802",
+      "canonicalOwner": "N01",
+      "meshTargets": [
+        "N01",
+        "JEV"
+      ],
       "capabilities": [
         "typed-agents",
         "tools",
         "subagents",
         "durable-execution"
       ],
-      "direct_affinity": true,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "inference.reason",
+        "ai.infer"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "llama-index",
+      "source": "https://github.com/run-llama/llama_index",
+      "revision": "962940ddc079cc21701d28d1237c84c82a7c5164",
+      "canonicalOwner": "N05",
+      "meshTargets": [
+        "N05"
+      ],
       "capabilities": [
         "RAG",
         "indexing",
         "retrieval",
         "agent-workflows"
       ],
-      "direct_affinity": true,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "retrieval.llama-index@1.0.0",
+        "retrieval.llama-index"
+      ],
+      "directAffinity": true,
+      "state": "ADAPTER_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "ADAPTER_BOUND"
     },
     {
       "id": "dspy",
+      "source": "https://github.com/stanfordnlp/dspy",
+      "revision": "ba3f9198efe5d125c7c1a2b40b1f1e6166209bd2",
+      "canonicalOwner": "N06",
+      "meshTargets": [
+        "N06"
+      ],
       "capabilities": [
         "LM-programming",
         "optimization",
         "reasoning-pipelines"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "inference.reason",
+        "ai.infer"
+      ],
+      "directAffinity": true,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "whisper",
+      "source": "https://github.com/openai/whisper",
+      "revision": "86098128c0b4f24f0e2aa2994de830614b474227",
+      "canonicalOwner": "N03",
+      "meshTargets": [
+        "N03"
+      ],
       "capabilities": [
         "speech-to-text"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "multimodal.*"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     },
     {
       "id": "kokoro",
+      "source": "https://github.com/hexgrad/kokoro",
+      "revision": "dfb907a02bba8152ca444717ca5d78747ccb4bec",
+      "canonicalOwner": "N03",
+      "meshTargets": [
+        "N03"
+      ],
       "capabilities": [
         "text-to-speech"
       ],
-      "direct_affinity": false,
-      "access": "N07 canonical federation",
+      "n05Functions": [
+        "multimodal.*"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
       "structural_state": "REAL",
-      "runtime_state": "PROJECTED",
-      "requires_adapter": true
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "everything-claude-code",
+      "source": "https://github.com/affaan-m/ECC",
+      "revision": "ef648e01899ba3e8dc6371642deaaf64b4477775",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
+      "capabilities": [
+        "skills",
+        "instincts",
+        "memory-optimization",
+        "continuous-learning",
+        "security-scanning",
+        "research-first-development"
+      ],
+      "n05Functions": [
+        "engineering.skills",
+        "workflow.execute"
+      ],
+      "directAffinity": true,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "swarmclaw",
+      "source": "https://github.com/swarmclawai/swarmclaw",
+      "revision": "ed38ba5329c20e48c03b4a4028f4a76a1a75e2d1",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
+      "capabilities": [
+        "multi-agent-swarms",
+        "memory",
+        "MCP",
+        "delegation",
+        "scheduling"
+      ],
+      "n05Functions": [
+        "dispatch.*",
+        "workflow.execute",
+        "agent-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "mem0",
+      "source": "https://github.com/mem0ai/mem0",
+      "revision": "abb81c88e1f738a8117d8293530fbc31a5ef8fd9",
+      "canonicalOwner": "N06",
+      "meshTargets": [
+        "N06",
+        "SARA"
+      ],
+      "capabilities": [
+        "persistent-agent-memory",
+        "memory-management"
+      ],
+      "n05Functions": [
+        "conversation.memory",
+        "context-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "letta",
+      "source": "https://github.com/letta-ai/letta",
+      "revision": "5bcdd177d70fa2b31a754cfcd801e77b2e1ab16a",
+      "canonicalOwner": "N06",
+      "meshTargets": [
+        "N06",
+        "SARA"
+      ],
+      "capabilities": [
+        "stateful-agents",
+        "advanced-memory",
+        "learning"
+      ],
+      "n05Functions": [
+        "conversation.memory",
+        "context-orchestration"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "langfuse",
+      "source": "https://github.com/langfuse/langfuse",
+      "revision": "f75c661dbe8c6b85523c81486b39e8403ac2c141",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07",
+        "SARA"
+      ],
+      "capabilities": [
+        "tracing",
+        "evaluation",
+        "datasets",
+        "LLM-observability"
+      ],
+      "n05Functions": [
+        "dispatch.*"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "vllm",
+      "source": "https://github.com/vllm-project/vllm",
+      "revision": "7dfe3338d5f15dd3ccb233326aa65fde46e427ad",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
+      "capabilities": [
+        "high-throughput-inference",
+        "serving"
+      ],
+      "n05Functions": [
+        "ai.infer",
+        "inference.reason"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "sglang",
+      "source": "https://github.com/sgl-project/sglang",
+      "revision": "65f759144d192671af5301568113e38686999871",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
+      "capabilities": [
+        "high-performance-serving",
+        "multimodal-serving"
+      ],
+      "n05Functions": [
+        "ai.infer",
+        "inference.reason"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "ray",
+      "source": "https://github.com/ray-project/ray",
+      "revision": "f8a314bf077c9772fee2a8a1073368ca2ef9360b",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
+      "capabilities": [
+        "distributed-compute",
+        "actors",
+        "parallelism",
+        "AI workloads"
+      ],
+      "n05Functions": [
+        "resource.execution",
+        "distributed.compute"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
+    },
+    {
+      "id": "megatron-lm",
+      "source": "https://github.com/NVIDIA/Megatron-LM",
+      "revision": "160561d12927b36b1429ac35f86793cb2ece0ec6",
+      "canonicalOwner": "N07",
+      "meshTargets": [
+        "N07"
+      ],
+      "capabilities": [
+        "large-scale-transformer-training",
+        "distributed-training"
+      ],
+      "n05Functions": [
+        "resource.execution",
+        "distributed.compute"
+      ],
+      "directAffinity": false,
+      "state": "CATALOG_BOUND",
+      "access": "N05 capability fabric",
+      "structural_state": "REAL",
+      "requires_adapter": true,
+      "runtime_state": "PROJECTED"
     }
   ],
   "soul_peer_count": 9,
@@ -244,9 +645,18 @@
       "soul.engineer.resilience"
     ],
     "component": [
+      "N05.resident",
+      "N05-inference-agent",
+      "N05-llama-index-retrieval-agent",
       "soul.engineer.runtime",
       "soul.engineer.verification"
     ]
   },
-  "rule": "External capabilities reinforce native SOUL functions; they do not replace ownership. Runtime success requires real adapter/configuration/evidence."
+  "integration_runtime": {
+    "fabric": "lib/soul-mesh/N05ExternalCapabilityFabric.ts",
+    "runtime": "lib/soul-mesh/Nucleus05Runtime.ts + src/mesh/N05Capabilities.ts",
+    "rule": "source -> affinity -> native handler or canonical owner",
+    "no_fake_runtime_success": true
+  },
+  "rule": "External sources amplify N05 conversation/retrieval/orchestration capabilities; they never replace N05 authority."
 }

@@ -1,7 +1,7 @@
 name: SOUL Integration CI - N05
 on:
   push:
-    branches: [main]
+    branches: [main, feat/n05-soul25-integration-20261003]
   pull_request:
 permissions:
   contents: read
@@ -12,6 +12,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
       - name: Validate SOUL identity
         run: test -s SOUL_ECOSYSTEM.md
       - name: Validate submodules
@@ -21,3 +28,21 @@ jobs:
           if test -f .gitmodules; then
             git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}' | while read p; do test -e "$p"; done
           fi
+
+      - name: Validate N05 25-source fabric
+        run: |
+          python3 - <<'PY'
+          import json
+          m=json.load(open('integrations/soul-25-augmentation.json'))
+          assert m['external_provider_count'] == 25
+          assert len(m['external_providers']) == 25
+          assert m['component_id'] == 'N05'
+          assert m['soul_peer_count'] == 9
+          print('N05 SOUL-34 / 25-UPSTREAM FABRIC: PASS')
+          PY
+      - name: N05 capability fabric and retrieval tests
+        run: pnpm run test:mesh
+      - name: N05 fabric resolver tests
+        run: pnpm exec tsx --test lib/soul-mesh/N05ExternalCapabilityFabric.test.ts
+      - name: N05 typecheck
+        run: pnpm run typecheck

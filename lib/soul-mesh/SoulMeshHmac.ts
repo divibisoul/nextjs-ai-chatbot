@@ -15,7 +15,6 @@ function canonicalize(message: SoulMeshMessage, nonce: string): string {
     capability: message.capability ?? null,
     payload: message.payload,
     timestamp: message.timestamp,
-    transport: message.meta?.transport,
     meta: message.meta ?? null,
     nonce,
   });
@@ -52,6 +51,7 @@ export function signSoulMeshResponse(
   secret: string,
 ): { message: SoulMeshMessage; nonce: string; hmac: string } {
   if (!secret) throw new Error('SOUL_MESH_HMAC_SECRET_MISSING');
+  const nonce = createSoulMeshNonce();
   const message: SoulMeshMessage = {
     protocol: 'soul-mesh/1',
     contractVersion: '1.1.0',
@@ -68,23 +68,12 @@ export function signSoulMeshResponse(
       transport: 'HTTP',
       encoding: 'json',
       version: request.contractVersion,
+      nonce,
       traceId: request.meta?.traceId ?? request.correlationId,
     },
-  };
-  const nonce = createSoulMeshNonce();
-  const canonical = JSON.stringify({
-    version: '1.0',
-    contractVersion: message.contractVersion,
-    messageId: message.id,
-    source: message.source,
-    target: message.target,
-    timestamp: message.timestamp,
     nonce,
-    correlationId: message.correlationId,
-    type: kind === 'error' ? 'ERROR' : 'TASK_RESULT',
-    payload: { capability: message.capability ?? '', payload: message.payload ?? {} },
-  });
-  const hmac = digest(canonical, secret);
+  };
+  const hmac = signSoulMeshMessage(message, secret, nonce);
   return { message, nonce, hmac };
 }
 
@@ -101,25 +90,5 @@ export function verifySoulMeshResponse(
   if (response.source !== request.target || response.target !== request.source) return false;
   if (response.kind !== 'response' && response.kind !== 'error') return false;
   if (!Number.isFinite(response.timestamp) || Math.abs(now - response.timestamp) > MAX_CLOCK_SKEW_MS) return false;
-  const canonical = JSON.stringify({
-    version: '1.0',
-    contractVersion: response.contractVersion,
-    messageId: response.id,
-    source: response.source,
-    target: response.target,
-    timestamp: response.timestamp,
-    nonce,
-    correlationId: response.correlationId,
-    type: response.kind === 'error' ? 'ERROR' : 'TASK_RESULT',
-    payload: { capability: response.capability ?? '', payload: response.payload ?? {} },
-  });
-  try {
-    const expected = createHmac('sha256', secret).update(canonical, 'utf8').digest('hex');
-    if (!/^[0-9a-f]{64}$/i.test(hmacValue)) return false;
-    const actual = Buffer.from(hmacValue, 'hex');
-    const wanted = Buffer.from(expected, 'hex');
-    return actual.length === wanted.length && timingSafeEqual(actual, wanted);
-  } catch {
-    return false;
-  }
+  return verifySoulMeshMessage(response, secret, nonce, hmacValue, now);
 }
