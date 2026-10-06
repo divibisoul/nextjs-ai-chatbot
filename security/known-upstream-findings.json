@@ -1,0 +1,6 @@
+{
+  "policy_version":"1.0.0",
+  "known_upstream_findings":[
+    {"advisory":"GHSA-vfj7-8cjw-p6xm","package":"braces","severity":"high","affected":"<=3.0.3","status":"UPSTREAM_UNPATCHED","reason":"GitHub Advisory Database reports no patched braces version as of 2026-10-02; current N05 Tailwind 3 dependency tree resolves braces 3.0.3.","reviewed_at":"2026-10-03"}
+  ]
+}
