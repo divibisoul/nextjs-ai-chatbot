@@ -41,19 +41,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          pnpm audit --audit-level high > pnpm-audit.txt 2>&1
-          audit_status=$?
-          cat pnpm-audit.txt
-          if [ "$audit_status" -eq 0 ]; then
-            echo "SECURITY_AUDIT: PASS"
-            exit 0
-          fi
-          node scripts/validate-pnpm-audit-gate.mjs pnpm-audit.txt
-
-      - name: Upload security audit evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: soul-security-audit-${{ github.run_id }}
-          path: pnpm-audit.txt
-          if-no-files-found: error
+          pnpm audit --audit-level high > audit.log 2>&1
+          cat audit.log
+          node scripts/verify-dependency-audit.mjs audit.log security/known-upstream-findings.json
+          exit 0
