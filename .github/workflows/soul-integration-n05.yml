@@ -6,12 +6,28 @@ on:
 permissions:
   contents: read
 jobs:
+  submodule-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Submodule recursion guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R -nE 'submodules:[[:space:]]*recursive' .github/workflows; then
+            echo "Recursive submodule checkout is forbidden."
+            exit 1
+          fi
+
+jobs:
   contract:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
       - name: Validate SOUL identity
         run: test -s SOUL_ECOSYSTEM.md
       - name: Validate submodules
