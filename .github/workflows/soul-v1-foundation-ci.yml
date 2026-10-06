@@ -1,0 +1,33 @@
+name: SOUL v1 foundation CI - N05
+on:
+  push:
+    branches: [restructure/soul-v1-n05-ci-2026-10-06]
+  pull_request:
+    branches: [restructure/soul-v1-n05-ci-2026-10-06]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install exact lock
+        run: pnpm install --frozen-lockfile
+      - name: Mesh typecheck
+        run: pnpm run typecheck:mesh
+      - name: Mesh regressions
+        run: pnpm run test:mesh
+      - name: SARA boundary tests
+        run: pnpm run test:sara
+      - name: Build
+        run: pnpm run build
