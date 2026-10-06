@@ -26,6 +26,8 @@ export const SOUL_MESH_CAPABILITIES: SoulMeshCapability[] = [
   { id:'gemini.embed',version:'1.0',description:'Gemini semantic embedding generation for memory and learning retrieval',request:true,response:true,events:false,owner:'N05',execution:'tool' },
   { id:'gemini.learning.assess',version:'1.0',description:'Gemini function-call assessment boundary for evidence-backed N07 learning feedback',request:true,response:true,events:true,owner:'N05',execution:'orchestration' },
   { id:'memory.record',version:'1.0',description:'User-scoped semantic memory persistence backed by N07 pgvector',request:true,response:true,events:true,owner:'N07',execution:'remote' },
+  { id:'external.capability.resolve@1.0.0',version:'1.0',description:'Resolve an external source and its canonical owner from the N05 capability fabric',request:true,response:true,events:false,owner:'N05',execution:'orchestration' },
+  { id:'external.capability.fabric.describe@1.0.0',version:'1.0',description:'Describe the complete 25-source N05 capability fabric',request:true,response:true,events:false,owner:'N05',execution:'observability' },
   { id:'memory.search',version:'1.0',description:'User-scoped semantic memory retrieval backed by N07 pgvector',request:true,response:true,events:true,owner:'N07',execution:'remote' },
   { id:'retrieval.llama-index@1.0.0',version:'1.0',description:'Optional LlamaIndex RAG/retrieval adapter behind the native N05 retrieval boundary',request:true,response:true,events:false,owner:'N05',execution:'remote' },
 
