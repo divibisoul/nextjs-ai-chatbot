@@ -9,6 +9,7 @@ import type { SoulInferenceRequest } from '@/lib/soul-mesh/SoulMeshAI';
 import { sendToNucleus } from '@/lib/soul-mesh/adapter';
 import { geminiCodeExecution, geminiEmbed, geminiGoogleSearch, geminiUrlContext } from '@/lib/gemini/GeminiToolset';
 import { retrieveWithLlamaIndex, type LlamaIndexRequest } from '@/lib/soul-mesh/LlamaIndexAdapter';
+import { describeN05ExternalCapabilityFabric, resolveN05ExternalProvider } from '@/lib/soul-mesh/N05ExternalCapabilityFabric';
 
 const systems: Record<string, string> = {
   'inference.reason': 'You are N05, the Soul inference engine. Reason precisely and return only the requested reasoning.',
@@ -123,6 +124,23 @@ export function createN05CapabilityGateway() {
   };
   agents.register(retrievalAgent);
   gateway.register('retrieval.llama-index@1.0.0', (request) => agents.execute(request), N05_OWNERSHIP['retrieval.']);
+
+  const externalFabricAgent: N05Agent = {
+    id: 'N05-external-fabric-agent',
+    name: 'N05 External Capability Fabric Agent',
+    capabilities: ['external.capability.resolve@1.0.0','external.capability.fabric.describe@1.0.0'],
+    execute: async (request) => {
+      const payload = request.payload && typeof request.payload === 'object' ? request.payload as Record<string, unknown> : {};
+      if (request.capability === 'external.capability.fabric.describe@1.0.0') return describeN05ExternalCapabilityFabric();
+      const provider = String(payload.provider ?? '').trim();
+      if (!provider) throw new Error('N05_EXTERNAL_PROVIDER_REQUIRED');
+      return { nucleus:'N05', provider:resolveN05ExternalProvider(provider), correlationId:request.correlationId };
+    },
+  };
+  agents.register(externalFabricAgent);
+  for (const capability of externalFabricAgent.capabilities) {
+    gateway.register(capability, (request) => agents.execute(request), N05_OWNERSHIP['support.']);
+  }
 
   const collaborationAgent: N05Agent = {
     id: 'N05-n06-collaboration-agent',
