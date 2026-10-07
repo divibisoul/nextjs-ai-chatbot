@@ -1,0 +1,49 @@
+name: N05 dependency lock synchronization
+
+on:
+  push:
+    branches:
+      - forensic/n05-*
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: n05-lock-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Regenerate lockfile from package manifest
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
+      - name: Persist lockfile when it changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "LOCKFILE_SYNC: clean"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore(deps): sync pnpm lockfile"
+          git push origin HEAD:${{ github.ref_name }}
+
+# forensic trigger: keep frozen-lockfile validation tied to the repaired manifest

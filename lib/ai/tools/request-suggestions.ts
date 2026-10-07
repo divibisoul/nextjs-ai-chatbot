@@ -32,9 +32,12 @@ export const requestSuggestions = ({
         };
       }
 
-      const suggestions: Array<
-        Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
-      > = [];
+      type DraftSuggestion = Omit<
+        Suggestion,
+        'userId' | 'createdAt' | 'documentCreatedAt'
+      >;
+
+      const suggestions: DraftSuggestion[] = [];
 
       const { elementStream } = streamObject({
         model: myProvider.languageModel('artifact-model'),
@@ -50,8 +53,15 @@ export const requestSuggestions = ({
       });
 
       for await (const element of elementStream) {
-        // @ts-ignore todo: fix type
-        const suggestion: Suggestion = {
+        if (
+          typeof element.originalSentence !== 'string' ||
+          typeof element.suggestedSentence !== 'string' ||
+          typeof element.description !== 'string'
+        ) {
+          continue;
+        }
+
+        const suggestion: DraftSuggestion = {
           originalText: element.originalSentence,
           suggestedText: element.suggestedSentence,
           description: element.description,
