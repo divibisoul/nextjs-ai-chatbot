@@ -32,9 +32,12 @@ export const requestSuggestions = ({
         };
       }
 
-      const suggestions: Array<
-        Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
-      > = [];
+      type DraftSuggestion = Omit<
+        Suggestion,
+        'userId' | 'createdAt' | 'documentCreatedAt'
+      >;
+
+      const suggestions: DraftSuggestion[] = [];
 
       const { elementStream } = streamObject({
         model: myProvider.languageModel('artifact-model'),
@@ -58,7 +61,7 @@ export const requestSuggestions = ({
           continue;
         }
 
-        const suggestion: Suggestion = {
+        const suggestion: DraftSuggestion = {
           originalText: element.originalSentence,
           suggestedText: element.suggestedSentence,
           description: element.description,
