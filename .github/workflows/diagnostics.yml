@@ -1,4 +1,4 @@
-name: N04 validation diagnostics
+name: N05 validation diagnostics
 on:
   push:
     branches: [main]
