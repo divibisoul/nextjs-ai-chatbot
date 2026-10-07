@@ -72,6 +72,17 @@ export class N05PeerMeshBridge {
   }
   throw last instanceof Error?last:new Error(`PEER_REQUEST_FAILED:${peer}`);
  }
+ async executePublicCapability(
+  provider:'bijux-dag-runtime'|'ouro-loop'|'recuris'|'fedml'|'hivemind'|'temporal'|'hora-graph-core'|'cognitive-workspace'|'ravana'|'ray'|'nats-go',
+  operation:string,
+  payload:unknown,
+  correlationId:string=randomUUID(),
+  traceId:string=correlationId,
+ ){
+  const normalizedOperation=operation.trim();
+  if(!normalizedOperation)throw new Error('PUBLIC_CAPABILITY_OPERATION_REQUIRED');
+  return this.request('N07',`external.${provider}.execute@1.0.0`,{payload,metadata:{provider,external_operation:normalizedOperation}},correlationId,traceId);
+ }
  async health(peer:NucleusId){return this.request(peer,'mesh.health',{nucleus:'N05'});}
  async broadcast(capability:string,payload:unknown){return Promise.allSettled([...this.peers.keys()].map(peer=>this.request(peer,capability,payload)));}
  async combo(steps:readonly {target:NucleusId;capability:string;payload?:unknown}[]){const correlationId=randomUUID(),traceId=randomUUID();let value:unknown=null;const results:unknown[]=[];for(const step of steps){const result=await this.request(step.target,step.capability,step.payload??value,correlationId,traceId);value=result.payload;results.push(result);}return{correlationId,traceId,results,final:value};}
