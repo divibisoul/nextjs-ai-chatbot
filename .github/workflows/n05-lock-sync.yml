@@ -45,3 +45,5 @@ jobs:
           git add pnpm-lock.yaml
           git commit -m "chore(deps): sync pnpm lockfile"
           git push origin HEAD:${{ github.ref_name }}
+
+# forensic trigger: keep frozen-lockfile validation tied to the repaired manifest
