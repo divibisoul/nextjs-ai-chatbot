@@ -22,7 +22,8 @@
     "typecheck:mesh": "tsc -p tsconfig.mesh.json --noEmit",
     "test:sara": "tsx --test lib/sara/SARAClient.test.ts",
     "test:gemini": "pnpm exec tsx --test lib/gemini/GeminiToolset.test.ts",
-    "test:learning": "pnpm exec tsx --test lib/gemini/GeminiToolset.test.ts lib/soul-neural/N07Bridge.test.ts"
+    "test:learning": "pnpm exec tsx --test lib/gemini/GeminiToolset.test.ts lib/soul-neural/N07Bridge.test.ts",
+    "test:mesh:hmac": "tsx --test lib/soul-mesh/N05BidirectionalHmac.test.ts lib/soul-mesh/N05PeerClientAuth.test.ts"
   },
   "dependencies": {
     "@ai-sdk/provider": "2.0.0-beta.1",
