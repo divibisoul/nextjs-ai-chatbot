@@ -50,10 +50,13 @@ jobs:
           fi
           node scripts/validate-pnpm-audit-gate.mjs pnpm-audit.txt
 
-      - name: Upload security audit evidence
+      - name: Upload security audit and regenerated lockfile evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: soul-security-audit-${{ github.run_id }}
-          path: pnpm-audit.txt
+          path: |
+            pnpm-audit.txt
+            pnpm-lock.yaml
           if-no-files-found: error
+          retention-days: 3
