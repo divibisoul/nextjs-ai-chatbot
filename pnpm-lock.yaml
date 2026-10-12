@@ -22,6 +22,7 @@ overrides:
   minimatch@9: 9.0.7
   minimatch@3: 3.1.4
   source-map-js: 1.2.2
+  prosemirror-model: 1.25.12
   prosemirror-view: 1.42.3
 
 importers:
@@ -179,8 +180,8 @@ importers:
         specifier: ^1.13.1
         version: 1.13.1
       prosemirror-model:
-        specifier: ^1.23.0
-        version: 1.24.1
+        specifier: 1.25.12
+        version: 1.25.12
       prosemirror-schema-basic:
         specifier: ^1.2.3
         version: 1.2.3
@@ -3448,9 +3449,6 @@ packages:
 
   prosemirror-menu@1.2.4:
     resolution: {integrity: sha512-S/bXlc0ODQup6aiBbWVsX/eM+xJgCTAfMq/nLqaO5ID/am4wS0tTCIkzwytmao7ypEtjj39i7YbJjAgO20mIqA==}
-
-  prosemirror-model@1.24.1:
-    resolution: {integrity: sha512-YM053N+vTThzlWJ/AtPtF1j0ebO36nvbmDy4U7qA2XQB8JVaQp1FmB9Jhrps8s+z+uxhhVTny4m20ptUvhk0Mg==}
 
   prosemirror-model@1.25.12:
     resolution: {integrity: sha512-Ue2gTmXMa7EhpLNhC7J+h4+ykD8ha12K6rrZFFKKJHBForfIStw5gJ6Zrf1mqqAa9NmpmEB4wp9bKmA4eUVjWg==}
@@ -7244,7 +7242,7 @@ snapshots:
 
   prosemirror-commands@1.7.0:
     dependencies:
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.3
 
@@ -7269,7 +7267,7 @@ snapshots:
   prosemirror-gapcursor@1.3.2:
     dependencies:
       prosemirror-keymap: 1.2.2
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
       prosemirror-state: 1.4.3
       prosemirror-view: 1.42.3
 
@@ -7294,7 +7292,7 @@ snapshots:
     dependencies:
       '@types/markdown-it': 14.1.2
       markdown-it: 14.1.0
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
 
   prosemirror-menu@1.2.4:
     dependencies:
@@ -7303,33 +7301,29 @@ snapshots:
       prosemirror-history: 1.4.1
       prosemirror-state: 1.4.3
 
-  prosemirror-model@1.24.1:
-    dependencies:
-      orderedmap: 2.1.1
-
   prosemirror-model@1.25.12:
     dependencies:
       orderedmap: 2.1.1
 
   prosemirror-schema-basic@1.2.3:
     dependencies:
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
 
   prosemirror-schema-list@1.5.1:
     dependencies:
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.3
 
   prosemirror-state@1.4.3:
     dependencies:
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
       prosemirror-transform: 1.10.3
       prosemirror-view: 1.42.3
 
   prosemirror-transform@1.10.3:
     dependencies:
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.12
 
   prosemirror-view@1.42.3:
     dependencies:
