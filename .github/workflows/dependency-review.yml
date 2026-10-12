@@ -33,6 +33,9 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Preserve lockfile input for regeneration diff
+        run: cp pnpm-lock.yaml pnpm-lock-before.yaml
+
       - name: Regenerate dependency lockfile
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
@@ -58,5 +61,6 @@ jobs:
           path: |
             pnpm-audit.txt
             pnpm-lock.yaml
+            pnpm-lock-before.yaml
           if-no-files-found: error
           retention-days: 3
