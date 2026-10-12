@@ -54,5 +54,8 @@ jobs:
       - name: Execute N05 N07 bridge HMAC test
         run: pnpm exec tsx --test lib/soul-neural/N07Bridge.test.ts
 
+      - name: Execute N05 bidirectional Mesh HMAC tests
+        run: pnpm run test:mesh:hmac
+
       - name: Execute complete Mesh bridge test set
         run: pnpm run test:mesh
