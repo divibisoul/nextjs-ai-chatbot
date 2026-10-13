@@ -4,23 +4,29 @@ import { signSoulMeshResponse } from './SoulMeshHmac';
 import { SOUL_MESH_CAPABILITIES } from './SoulMeshCapabilities';
 import { createNucleus05Runtime, type N05CapabilityHandler } from './Nucleus05Runtime';
 import { createN05CapabilityGateway } from '../../src/mesh/N05Capabilities';
+import {
+  SOUL_MESH_CONTRACT_VERSION,
+  SOUL_MESH_KINDS,
+  SOUL_MESH_PROTOCOL,
+  isSoulNucleus,
+  type SoulMeshMessage,
+  type SoulNucleus,
+} from './SoulMeshProtocol';
+
+export { SOUL_MESH_PROTOCOL, SOUL_MESH_CONTRACT_VERSION };
+export type { SoulMeshMessage, SoulNucleus };
 
 export const NUCLEUS_ID = 'N05' as const;
-export const SOUL_MESH_PROTOCOL = 'soul-mesh/1' as const;
-export const SOUL_MESH_CONTRACT_VERSION = '1.1.0' as const;
-export type SoulNucleus = 'N01'|'N02'|'N03'|'N04'|'N05'|'N06'|'N07';
 export type NucleusId = SoulNucleus;
-export type SoulMeshMessage = { protocol: typeof SOUL_MESH_PROTOCOL; contractVersion: typeof SOUL_MESH_CONTRACT_VERSION; id: string; correlationId: string; source: SoulNucleus; target: SoulNucleus; kind: 'request'|'response'|'event'|'error'; capability?: string; payload: unknown; timestamp: number; nonce?: string; hmac?: string; meta?: { runtime?: string; transport?: string; encoding?: string; version?: string; nonce?: string; traceId?: string } };
-const nuclei = new Set<SoulNucleus>(['N01','N02','N03','N04','N05','N06','N07']);
 const capabilityGateway = createN05CapabilityGateway();
 
 export function validateMeshMessage(m: SoulMeshMessage) {
   if (m.protocol !== SOUL_MESH_PROTOCOL) throw new Error('UNSUPPORTED_MESH_PROTOCOL');
   if (m.contractVersion !== SOUL_MESH_CONTRACT_VERSION) throw new Error('UNSUPPORTED_MESH_CONTRACT_VERSION');
   if (!m.id || !m.correlationId) throw new Error('MISSING_MESSAGE_ID');
-  if (!nuclei.has(m.source) || !nuclei.has(m.target) || m.source === m.target) throw new Error('INVALID_NUCLEUS_ROUTE');
+  if (!isSoulNucleus(m.source) || !isSoulNucleus(m.target) || m.source === m.target) throw new Error('INVALID_NUCLEUS_ROUTE');
   if (m.target !== NUCLEUS_ID) throw new Error('WRONG_TARGET');
-  if (!['request','response','event','error'].includes(m.kind)) throw new Error('INVALID_MESSAGE_KIND');
+  if (!SOUL_MESH_KINDS.includes(m.kind)) throw new Error('INVALID_MESSAGE_KIND');
   if (!m.capability && m.kind !== 'event') throw new Error('MISSING_CAPABILITY');
   if (!Number.isFinite(m.timestamp)) throw new Error('INVALID_TIMESTAMP');
   if (Math.abs(Date.now() - m.timestamp) > 30_000) throw new Error('STALE_MESSAGE');
