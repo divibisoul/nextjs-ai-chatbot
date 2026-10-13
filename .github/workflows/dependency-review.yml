@@ -37,7 +37,11 @@ jobs:
         run: cp pnpm-lock.yaml pnpm-lock-before.yaml
 
       - name: Regenerate dependency lockfile
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: |
+          pnpm install --no-frozen-lockfile --ignore-scripts
+          echo "::group::Audited pnpm lockfile delta from declared overrides"
+          git diff -- pnpm-lock.yaml
+          echo "::endgroup::"
 
 
       - name: Audit high severity dependencies
