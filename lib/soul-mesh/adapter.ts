@@ -91,7 +91,12 @@ export async function sendToNucleus(
     }
 
     if (!response.ok) throw new Error(`MESH_HTTP_${response.status}`);
-    if (body.kind === 'error') throw new Error(`MESH_REMOTE_ERROR:${target}:${body.payload?.code ?? 'UNKNOWN'}`);
+    if (body.kind === 'error') {
+      const remoteCode = body.payload && typeof body.payload === 'object' && 'code' in body.payload
+        ? String((body.payload as { code: unknown }).code)
+        : 'UNKNOWN';
+      throw new Error(`MESH_REMOTE_ERROR:${target}:${remoteCode}`);
+    }
     return body.payload;
   } finally {
     clearTimeout(timer);
