@@ -34,6 +34,55 @@ function digest(value: string, secret: string): string {
   return createHmac('sha256', secret).update(value, 'utf8').digest('hex');
 }
 
+export function signCanonicalSoulMeshResponse(
+  request: SoulMeshMessage,
+  payload: unknown,
+  kind: 'response' | 'error',
+  secret: string,
+  traceId = request.meta?.traceId ?? request.correlationId,
+): { message: SoulMeshMessage & { nonce: string; hmac: string }; nonce: string; hmac: string } {
+  assertHmacSecret(secret);
+  const nonce = createSoulMeshNonce();
+  const base: SoulMeshMessage = {
+    protocol: request.protocol,
+    contractVersion: request.contractVersion,
+    id: randomBytes(16).toString('hex'),
+    correlationId: request.correlationId,
+    source: request.target,
+    target: request.source,
+    kind,
+    capability: request.capability,
+    payload,
+    timestamp: Date.now(),
+    meta: {
+      runtime: 'nextjs-ai-chatbot',
+      transport: 'HTTP',
+      encoding: 'json',
+      version: request.contractVersion,
+      nonce,
+      traceId,
+    },
+  };
+  const hmac = signSoulMeshMessage(base, secret, nonce);
+  const message = { ...base, nonce, hmac };
+  return { message, nonce, hmac };
+}
+
+export function verifyCanonicalSoulMeshResponse(
+  request: SoulMeshMessage,
+  response: SoulMeshMessage & { nonce?: string; hmac?: string },
+  secret: string,
+  now = Date.now(),
+): boolean {
+  const nonce = String(response.nonce ?? response.meta?.nonce ?? '').trim();
+  const hmac = String(response.hmac ?? '').trim();
+  if (!nonce || !hmac) return false;
+  if (response.correlationId !== request.correlationId) return false;
+  if (response.source !== request.target || response.target !== request.source) return false;
+  if (response.kind !== 'response' && response.kind !== 'error') return false;
+  return verifySoulMeshMessage(response, secret, nonce, hmac, now);
+}
+
 export function signSoulMeshMessage(message: SoulMeshMessage, secret: string, nonce: string): string {
   if (!secret) throw new Error('SOUL_MESH_HMAC_SECRET_MISSING');
   assertHmacSecret(secret);
