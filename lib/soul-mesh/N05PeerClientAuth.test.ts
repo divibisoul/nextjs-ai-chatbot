@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHmac } from 'node:crypto';
-import { signSoulMeshResponse } from './SoulMeshHmac';
+import { signCanonicalSoulMeshResponse } from './SoulMeshHmac';
 import type { SoulMeshMessage } from './SoulMeshProtocol';
 
 const secret = '01234567890123456789012345678901';
@@ -34,7 +34,7 @@ test('N05 peer client signs the N07 canonical request and verifies the signed re
     const headers = new Headers(init?.headers);
     const nonce = String(headers.get('x-soul-mesh-nonce'));
     assert.equal(headers.get('x-soul-mesh-hmac'), createHmac('sha256', secret).update(canonicalRequest(request, nonce)).digest('hex'));
-    const signed = signSoulMeshResponse(request, { ok: true }, 'response', secret);
+    const signed = signCanonicalSoulMeshResponse(request, { ok: true }, 'response', secret);
     return new Response(JSON.stringify({ ...signed.message, nonce: signed.nonce, hmac: signed.hmac }), {
       status: 200, headers: { 'content-type': 'application/json' },
     });
@@ -62,7 +62,7 @@ test('N05 peer client rejects a tampered response HMAC', async () => {
   const peer = await import('./peer-client');
   globalThis.fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as SoulMeshMessage;
-    const signed = signSoulMeshResponse(request, { ok: true }, 'response', secret);
+    const signed = signCanonicalSoulMeshResponse(request, { ok: true }, 'response', secret);
     return new Response(JSON.stringify({ ...signed.message, nonce: signed.nonce, hmac: '0'.repeat(64) }), {
       status: 200, headers: { 'content-type': 'application/json' },
     });
