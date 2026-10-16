@@ -1,8 +1,10 @@
 import { strict as assert } from 'node:assert';
+import { createHmac } from 'node:crypto';
 import test from 'node:test';
 import { createRequest, sendToNucleus } from './adapter';
 import { verifySoulMeshMessage, signSoulMeshMessage, createSoulMeshNonce, signSoulMeshResponse, verifySoulMeshResponse, signCanonicalSoulMeshResponse, verifyCanonicalSoulMeshResponse } from './SoulMeshHmac';
 import { verifyN05RequestSignature } from './N05RequestAuthentication';
+import { signN07MeshRequest } from './N07MeshHmacCompatibility';
 
 const secret = '0123456789abcdef0123456789abcdef';
 
@@ -96,6 +98,28 @@ test('N05 production peer client refuses missing HMAC before network I/O', async
     if (previousURL === undefined) delete process.env.SOUL_MESH_N01_URL;
     else process.env.SOUL_MESH_N01_URL = previousURL;
   }
+});
+
+
+test('N05 N07 HMAC signer matches Go field order and lexically sorted nested map keys', () => {
+  const message = createRequest('N07', 'mesh.ping', {
+    nested: { '10': 'ten', '2': 'two' },
+    probe: true,
+  });
+  const nonce = 'n05-n07-independent-vector';
+  message.nonce = nonce;
+  message.meta = { ...(message.meta ?? {}), nonce };
+  const expectedCanonical =
+    '{"protocol":"soul-mesh/1","contractVersion":"1.1.0","id":' + JSON.stringify(message.id) +
+    ',"correlationId":' + JSON.stringify(message.correlationId) +
+    ',"source":"N05","target":"N07","kind":"request","capability":"mesh.ping",' +
+    '"payload":{"nested":{"10":"ten","2":"two"},"probe":true},' +
+    '"timestamp":' + String(message.timestamp) +
+    ',"transport":"HTTP","meta":{"encoding":"json","nonce":"n05-n07-independent-vector",' +
+    '"runtime":"nextjs-ai-chatbot","traceId":' + JSON.stringify(message.id) +
+    ',"transport":"HTTP","version":"1.1.0"},"nonce":"n05-n07-independent-vector"}';
+  const expected = createHmac('sha256', secret).update(expectedCanonical, 'utf8').digest('hex');
+  assert.equal(signN07MeshRequest(message, nonce, secret), expected);
 });
 
 test('N05 request nonce is canonical at envelope and meta levels', () => {
