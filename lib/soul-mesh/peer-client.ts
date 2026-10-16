@@ -1,5 +1,6 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { verifyCanonicalSoulMeshResponse, verifySoulMeshResponse } from './SoulMeshHmac';
+import { signN07MeshRequest } from './N07MeshHmacCompatibility';
 import type { SoulMeshMessage } from './SoulMeshProtocol';
 import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
 
@@ -117,7 +118,9 @@ export async function sendTo(
       if (token) headers.authorization = \`Bearer \${token}\`;
       if (secret) {
         headers['x-soul-mesh-nonce'] = nonceValue;
-        headers['x-soul-mesh-hmac'] = hmac(message, nonceValue, secret);
+        headers['x-soul-mesh-hmac'] = target === 'N07'
+          ? signN07MeshRequest(message, nonceValue, secret)
+          : hmac(message, nonceValue, secret);
       }
 
       const response = await fetch(\`\${url.replace(/\\/$/, '')}/api/soul-mesh\`, {
