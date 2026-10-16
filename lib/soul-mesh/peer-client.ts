@@ -63,6 +63,13 @@ const RETRY_SAFE_CAPABILITIES = new Set([
   'core.health',
 ]);
 
+function retryablePeerFailure(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  if (error instanceof Error && error.name === 'AbortError') return true;
+  return error instanceof Error
+    && /^SOUL_MESH_REMOTE_ERROR:[^:]+:(?:429|5\\d\\d)$/.test(error.message);
+}
+
 export async function sendTo(
   target: N05Peer,
   capability: string,
@@ -149,7 +156,8 @@ export async function sendTo(
       return body;
     } catch (error) {
       lastError = error;
-      if (attempt + 1 < maxAttempts) await new Promise(resolve => setTimeout(resolve, 150 * 2 ** attempt));
+      if (attempt + 1 >= maxAttempts || !retryablePeerFailure(error)) throw error;
+      await new Promise(resolve => setTimeout(resolve, 150 * 2 ** attempt));
     } finally {
       clearTimeout(timer);
     }
