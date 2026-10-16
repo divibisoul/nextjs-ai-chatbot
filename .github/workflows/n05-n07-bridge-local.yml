@@ -1,0 +1,84 @@
+name: N05 N07 Bridge Local Container
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  local-hmac:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Capture runner evidence
+        run: |
+          set -euo pipefail
+          echo "runner.name=${RUNNER_NAME}"
+          echo "runner.os=${RUNNER_OS}"
+          echo "runner.arch=${RUNNER_ARCH}"
+          echo "runner.environment=${RUNNER_ENVIRONMENT}"
+          docker --version
+
+      - name: Checkout N05
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull published N07 image
+        run: docker pull ghcr.io/divibisoul/soul-n07-orquestrador:latest
+
+      - name: Start N07 local runtime
+        env:
+          LOCAL_MESH_SECRET: n05-local-e2e-secret-0123456789abcdef
+        run: |
+          set -euo pipefail
+          docker run -d --rm --name n07-local \
+            -p 8080:8080 \
+            -e N07_APP_TOKEN=local-test \
+            -e SOUL_MESH_HMAC_SECRET="$LOCAL_MESH_SECRET" \
+            -e N07_HTTP_ADDR=:8080 \
+            ghcr.io/divibisoul/soul-n07-orquestrador:latest
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/health >/tmp/n07-health.json; then
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo 'N07 local runtime did not become healthy within 30 seconds' >&2
+              docker logs n07-local || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+          cat /tmp/n07-health.json
+
+      - name: Verify real N05 to N07 HMAC
+        env:
+          SOUL_N07_URL: http://localhost:8080
+          SOUL_MESH_HMAC_SECRET: n05-local-e2e-secret-0123456789abcdef
+        run: node scripts/manual-hmac-validator.mjs
+
+      - name: Verify existing N05 bridge contract
+        run: pnpm exec tsx --test lib/soul-neural/N07Bridge.test.ts
+
+      - name: Stop N07 local runtime
+        if: always()
+        run: |
+          docker logs n07-local || true
+          docker stop n07-local || true
