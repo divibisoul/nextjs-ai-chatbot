@@ -88,7 +88,6 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
       });
       const body = await response.json() as SoulMeshMessage & { nonce?: string; hmac?: string };
       assertResponse(message, body, target);
-      if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
       if (secret) {
         const responseNonce = String(body.nonce ?? body.meta?.nonce ?? '').trim();
         const responseHmac = String(body.hmac ?? '').trim();
@@ -99,6 +98,7 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
           throw new Error('SOUL_MESH_RESPONSE_HMAC_INVALID');
         }
       }
+      if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
       return body;
     } catch (error) {
       lastError = error;
