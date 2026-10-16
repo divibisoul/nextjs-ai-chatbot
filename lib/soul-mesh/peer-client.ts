@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from 'node:crypto';
-import { verifySoulMeshResponse } from './SoulMeshHmac';
+import { verifyCanonicalSoulMeshResponse, verifySoulMeshResponse } from './SoulMeshHmac';
 import type { SoulMeshMessage } from './SoulMeshProtocol';
 import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
 
@@ -88,14 +88,17 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
       });
       const body = await response.json() as SoulMeshMessage & { nonce?: string; hmac?: string };
       assertResponse(message, body, target);
-      if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
       if (secret) {
         const responseNonce = String(body.nonce ?? body.meta?.nonce ?? '').trim();
         const responseHmac = String(body.hmac ?? '').trim();
-        if (!verifySoulMeshResponse(message, body, secret, responseNonce, responseHmac)) {
+        const validResponse = message.target === 'N07'
+          ? verifySoulMeshResponse(message, body, secret, responseNonce, responseHmac)
+          : verifyCanonicalSoulMeshResponse(message, body, secret);
+        if (!validResponse) {
           throw new Error('SOUL_MESH_RESPONSE_HMAC_INVALID');
         }
       }
+      if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
       return body;
     } catch (error) {
       lastError = error;
