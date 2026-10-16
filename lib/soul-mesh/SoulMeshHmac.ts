@@ -25,18 +25,23 @@ export function createSoulMeshNonce(): string {
   return randomBytes(24).toString('base64url');
 }
 
+function assertHmacSecret(secret: string): void {
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32) throw new Error('SOUL_MESH_HMAC_SECRET_TOO_SHORT');
+}
+
 function digest(value: string, secret: string): string {
-  if (!secret || secret.length < 16) throw new Error('SOUL_MESH_HMAC_SECRET_INVALID');
+  assertHmacSecret(secret);
   return createHmac('sha256', secret).update(value, 'utf8').digest('hex');
 }
 
 export function signSoulMeshMessage(message: SoulMeshMessage, secret: string, nonce: string): string {
   if (!secret) throw new Error('SOUL_MESH_HMAC_SECRET_MISSING');
+  assertHmacSecret(secret);
   return createHmac('sha256', secret).update(canonicalize(message, nonce), 'utf8').digest('hex');
 }
 
 export function verifySoulMeshMessage(message: SoulMeshMessage, secret: string, nonce: string, hmac: string, now = Date.now()): boolean {
-  if (!secret || !nonce || !hmac || !Number.isFinite(message.timestamp)) return false;
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32 || !nonce || !hmac || !Number.isFinite(message.timestamp)) return false;
   if (Math.abs(now - message.timestamp) > MAX_CLOCK_SKEW_MS) return false;
   const expected = signSoulMeshMessage(message, secret, nonce);
   const actual = Buffer.from(hmac, 'hex');
@@ -52,6 +57,7 @@ export function signSoulMeshResponse(
   secret: string,
 ): { message: SoulMeshMessage; nonce: string; hmac: string } {
   if (!secret) throw new Error('SOUL_MESH_HMAC_SECRET_MISSING');
+  assertHmacSecret(secret);
   const message: SoulMeshMessage = {
     protocol: 'soul-mesh/1',
     contractVersion: '1.1.0',
@@ -96,7 +102,7 @@ export function verifySoulMeshResponse(
   hmacValue = response.hmac ?? '',
   now = Date.now(),
 ): boolean {
-  if (!secret || !nonce || !hmacValue) return false;
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32 || !nonce || !hmacValue) return false;
   if (response.correlationId !== request.correlationId) return false;
   if (response.source !== request.target || response.target !== request.source) return false;
   if (response.kind !== 'response' && response.kind !== 'error') return false;

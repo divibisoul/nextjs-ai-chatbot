@@ -17,12 +17,13 @@
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
     "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
-    "test:mesh": "pnpm exec tsx --test lib/soul-mesh/Nucleus05Runtime.test.ts lib/soul-mesh/SoulMeshTransportMultiplexer.test.ts src/mesh/N05MeshGateway.test.ts lib/soul-neural/N07Bridge.test.ts src/mesh/N05CooperationBridge.test.ts lib/soul-mesh/N05SuperGPUMesh.test.ts lib/soul-mesh/N05ExecutionGuard.test.ts",
+    "test:mesh": "pnpm exec tsx --test lib/soul-mesh/endpoint.test.ts lib/soul-mesh/endpoint.canonical-contract.test.ts lib/soul-mesh/Nucleus05Runtime.test.ts lib/soul-mesh/SoulMeshTransportMultiplexer.test.ts src/mesh/N05MeshGateway.test.ts lib/soul-neural/N07Bridge.test.ts src/mesh/N05CooperationBridge.test.ts lib/soul-mesh/N05SuperGPUMesh.test.ts lib/soul-mesh/N05ExecutionGuard.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:mesh": "tsc -p tsconfig.mesh.json --noEmit",
     "test:sara": "tsx --test lib/sara/SARAClient.test.ts",
     "test:gemini": "pnpm exec tsx --test lib/gemini/GeminiToolset.test.ts",
-    "test:learning": "pnpm exec tsx --test lib/gemini/GeminiToolset.test.ts lib/soul-neural/N07Bridge.test.ts"
+    "test:learning": "pnpm exec tsx --test lib/gemini/GeminiToolset.test.ts lib/soul-neural/N07Bridge.test.ts",
+    "test:mesh:hmac": "tsx --test lib/soul-mesh/N05BidirectionalHmac.test.ts lib/soul-mesh/N05PeerClientAuth.test.ts"
   },
   "dependencies": {
     "@ai-sdk/provider": "2.0.0-beta.1",
@@ -121,14 +122,14 @@
   "packageManager": "pnpm@9.12.3",
   "pnpm": {
     "overrides": {
-      "sharp": "0.35.4",
+      "sharp": "0.35.5",
       "js-yaml": "4.3.2",
       "brace-expansion": "1.1.21",
       "nanoid@3.3.9": "3.3.19",
       "postcss": "8.5.28",
       "playwright": "1.63.0",
       "glob": "10.5.0",
-      "flatted": "3.4.2",
+      "flatted": "3.4.4",
       "undici": "6.28.1",
       "picomatch@2.3.1": "2.3.2",
       "picomatch@4.0.2": "4.0.4",
@@ -136,7 +137,10 @@
       "linkify-it": "5.0.2",
       "ws": "8.21.0",
       "minimatch@9": "9.0.7",
-      "minimatch@3": "3.1.4"
+      "minimatch@3": "3.1.4",
+      "source-map-js": "1.2.2",
+      "prosemirror-model": "1.25.12",
+      "prosemirror-view": "1.42.3"
     }
   }
 }

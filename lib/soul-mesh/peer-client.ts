@@ -1,4 +1,5 @@
 import { createHmac, randomUUID } from 'node:crypto';
+import { verifySoulMeshResponse } from './SoulMeshHmac';
 import type { SoulMeshMessage } from './SoulMeshProtocol';
 import { createSoulMeshMessage, SOUL_MESH_PROTOCOL } from './SoulMeshProtocol';
 
@@ -28,11 +29,13 @@ function canonical(message: SoulMeshMessage, nonceValue: string): string {
     capability: message.capability ?? null,
     payload: message.payload,
     timestamp: message.timestamp,
+    transport: message.meta?.transport,
     meta: message.meta ?? null,
     nonce: nonceValue,
   });
 }
 function hmac(message: SoulMeshMessage, nonceValue: string, secret: string): string {
+  if (Buffer.byteLength(secret, 'utf8') < 32) throw new Error('SOUL_MESH_HMAC_SECRET_TOO_SHORT');
   return createHmac('sha256', secret).update(canonical(message, nonceValue), 'utf8').digest('hex');
 }
 
@@ -77,13 +80,22 @@ export async function sendTo(target: N05Peer, capability: string, payload: unkno
         headers['x-soul-mesh-hmac'] = hmac(message, nonceValue, secret);
       } else if (token) {
         headers.authorization = `Bearer ${token}`;
+      } else if (process.env.NODE_ENV === 'production') {
+        throw new Error(`SOUL_MESH_AUTH_NOT_CONFIGURED:${target}`);
       }
       const response = await fetch(`${url.replace(/\/$/, '')}/api/soul-mesh`, {
         method: 'POST', headers, body: JSON.stringify(message), signal: controller.signal, cache: 'no-store',
       });
-      const body = await response.json() as SoulMeshMessage;
+      const body = await response.json() as SoulMeshMessage & { nonce?: string; hmac?: string };
       assertResponse(message, body, target);
       if (!response.ok || body.kind === 'error') throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
+      if (secret) {
+        const responseNonce = String(body.nonce ?? body.meta?.nonce ?? '').trim();
+        const responseHmac = String(body.hmac ?? '').trim();
+        if (!verifySoulMeshResponse(message, body, secret, responseNonce, responseHmac)) {
+          throw new Error('SOUL_MESH_RESPONSE_HMAC_INVALID');
+        }
+      }
       return body;
     } catch (error) {
       lastError = error;

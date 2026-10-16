@@ -33,8 +33,15 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Preserve lockfile input for regeneration diff
+        run: cp pnpm-lock.yaml pnpm-lock-before.yaml
+
       - name: Regenerate dependency lockfile
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: |
+          pnpm install --no-frozen-lockfile --ignore-scripts
+          echo "::group::Audited pnpm lockfile delta from declared overrides"
+          git diff -- pnpm-lock.yaml
+          echo "::endgroup::"
 
 
       - name: Audit high severity dependencies
@@ -50,10 +57,14 @@ jobs:
           fi
           node scripts/validate-pnpm-audit-gate.mjs pnpm-audit.txt
 
-      - name: Upload security audit evidence
+      - name: Upload security audit and regenerated lockfile evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: soul-security-audit-${{ github.run_id }}
-          path: pnpm-audit.txt
+          path: |
+            pnpm-audit.txt
+            pnpm-lock.yaml
+            pnpm-lock-before.yaml
           if-no-files-found: error
+          retention-days: 3

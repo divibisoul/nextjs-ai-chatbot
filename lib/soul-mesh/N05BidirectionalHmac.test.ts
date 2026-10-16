@@ -21,3 +21,15 @@ test('N05 response HMAC enforces route and correlation', () => {
   assert.equal(verifySoulMeshResponse(request, response, secret, signed.nonce, signed.hmac), true);
   assert.equal(verifySoulMeshResponse(request, { ...response, target: 'N04' }, secret, signed.nonce, signed.hmac), false);
 });
+
+test('N05 rejects an HMAC key below the 32-byte Mesh minimum', () => {
+  const message = createRequest('N07', 'ai.generate', { text: 'ping' });
+  assert.throws(
+    () => signSoulMeshMessage(message, 'short-n05-secret', createSoulMeshNonce()),
+    /SOUL_MESH_HMAC_SECRET_TOO_SHORT/,
+  );
+  assert.equal(
+    verifySoulMeshMessage(message, 'short-n05-secret', createSoulMeshNonce(), '0'.repeat(64)),
+    false,
+  );
+});
