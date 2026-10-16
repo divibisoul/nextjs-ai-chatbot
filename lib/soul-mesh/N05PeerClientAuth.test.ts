@@ -77,3 +77,54 @@ test('N05 peer client rejects a tampered response HMAC', async () => {
     else process.env.SOUL_MESH_HMAC_SECRET = previousSecret;
   }
 });
+
+
+test('N05 peer client rejects an unsigned HTTP error before consulting status policy', async () => {
+  const previousURL = process.env.SOUL_MESH_N01_URL;
+  const previousSecret = process.env.SOUL_MESH_HMAC_SECRET;
+  const previousFetch = globalThis.fetch;
+  process.env.SOUL_MESH_N01_URL = 'http://n01.test/api/soul-mesh';
+  process.env.SOUL_MESH_HMAC_SECRET = secret;
+  const peer = await import('./peer-client');
+  globalThis.fetch = async (_input, init) => {
+    const request = JSON.parse(String(init?.body)) as SoulMeshMessage;
+    const signed = signCanonicalSoulMeshResponse(request, { code: 'remote-failure' }, 'error', secret);
+    return new Response(JSON.stringify({ ...signed.message, hmac: '0'.repeat(64) }), {
+      status: 400, headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    await assert.rejects(() => peer.sendTo('N01', 'mesh.ping', {}, 2000), /SOUL_MESH_RESPONSE_HMAC_INVALID/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousURL === undefined) delete process.env.SOUL_MESH_N01_URL;
+    else process.env.SOUL_MESH_N01_URL = previousURL;
+    if (previousSecret === undefined) delete process.env.SOUL_MESH_HMAC_SECRET;
+    else process.env.SOUL_MESH_HMAC_SECRET = previousSecret;
+  }
+});
+
+test('N05 peer client reports a correctly authenticated HTTP error only after verification', async () => {
+  const previousURL = process.env.SOUL_MESH_N01_URL;
+  const previousSecret = process.env.SOUL_MESH_HMAC_SECRET;
+  const previousFetch = globalThis.fetch;
+  process.env.SOUL_MESH_N01_URL = 'http://n01.test/api/soul-mesh';
+  process.env.SOUL_MESH_HMAC_SECRET = secret;
+  const peer = await import('./peer-client');
+  globalThis.fetch = async (_input, init) => {
+    const request = JSON.parse(String(init?.body)) as SoulMeshMessage;
+    const signed = signCanonicalSoulMeshResponse(request, { code: 'remote-failure' }, 'error', secret);
+    return new Response(JSON.stringify(signed.message), {
+      status: 400, headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    await assert.rejects(() => peer.sendTo('N01', 'mesh.ping', {}, 2000), /SOUL_MESH_REMOTE_ERROR:N01:400/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousURL === undefined) delete process.env.SOUL_MESH_N01_URL;
+    else process.env.SOUL_MESH_N01_URL = previousURL;
+    if (previousSecret === undefined) delete process.env.SOUL_MESH_HMAC_SECRET;
+    else process.env.SOUL_MESH_HMAC_SECRET = previousSecret;
+  }
+});
