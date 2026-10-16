@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { NUCLEUS_ID, SOUL_MESH_PROTOCOL, type SoulMeshMessage, type SoulNucleus, handleMeshMessage } from './endpoint';
 import { createSoulMeshNonce, signSoulMeshMessage, verifyCanonicalSoulMeshResponse, verifySoulMeshResponse } from './SoulMeshHmac';
+import { signN07MeshRequest } from './N07MeshHmacCompatibility';
 export type MeshPeer = { id: Exclude<SoulNucleus, 'N05'>; url: string };
 const CONTRACT_VERSION = '1.1.0' as const;
 const PEER_ENV: Record<MeshPeer['id'], string> = { N01:'SOUL_MESH_N01_URL', N02:'SOUL_MESH_N02_URL', N03:'SOUL_MESH_N03_URL', N04:'SOUL_MESH_N04_URL', N06:'SOUL_MESH_N06_URL', N07:'SOUL_MESH_N07_URL' };
@@ -46,7 +47,9 @@ export async function sendToNucleus(
       request.nonce = nonce;
       request.meta = { ...(request.meta ?? {}), nonce };
       headers['x-soul-mesh-nonce'] = nonce;
-      headers['x-soul-mesh-hmac'] = signSoulMeshMessage(request, hmacSecret, nonce);
+      headers['x-soul-mesh-hmac'] = target === 'N07'
+        ? signN07MeshRequest(request, nonce, hmacSecret)
+        : signSoulMeshMessage(request, hmacSecret, nonce);
     } else {
       // Legacy body signatures remain a non-production migration path only.
       const raw = JSON.stringify(request);
