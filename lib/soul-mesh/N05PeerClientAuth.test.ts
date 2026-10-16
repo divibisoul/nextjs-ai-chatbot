@@ -62,10 +62,12 @@ test('N05 peer client rejects a tampered response HMAC', async () => {
   const previousURL = process.env.SOUL_MESH_N01_URL;
   const previousSecret = process.env.SOUL_MESH_HMAC_SECRET;
   const previousFetch = globalThis.fetch;
+  let calls = 0;
   process.env.SOUL_MESH_N01_URL = 'http://n01.test/api/soul-mesh';
   process.env.SOUL_MESH_HMAC_SECRET = secret;
   const peer = await import('./peer-client');
   globalThis.fetch = async (_input, init) => {
+    calls += 1;
     const request = JSON.parse(String(init?.body)) as SoulMeshMessage;
     const signed = signCanonicalSoulMeshResponse(request, { ok: true }, 'response', secret);
     return new Response(JSON.stringify({ ...signed.message, nonce: signed.nonce, hmac: '0'.repeat(64) }), {
@@ -74,6 +76,7 @@ test('N05 peer client rejects a tampered response HMAC', async () => {
   };
   try {
     await assert.rejects(() => peer.sendTo('N01', 'mesh.ping', {}), /SOUL_MESH_RESPONSE_HMAC_INVALID/);
+    assert.equal(calls, 1, 'an authentication failure must not be retried');
   } finally {
     globalThis.fetch = previousFetch;
     if (previousURL === undefined) delete process.env.SOUL_MESH_N01_URL;
