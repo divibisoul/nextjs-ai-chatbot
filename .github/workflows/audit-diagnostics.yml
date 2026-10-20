@@ -4,9 +4,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  push:
-    branches: [audit/2026-09-01-hardening]
   workflow_dispatch:
+
 permissions:
   contents: write
 jobs:
