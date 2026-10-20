@@ -1,5 +1,9 @@
 name: N05 N07 Bridge CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main ]
