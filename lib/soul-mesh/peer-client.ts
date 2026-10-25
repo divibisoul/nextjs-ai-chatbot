@@ -162,7 +162,7 @@ export async function sendTo(
       clearTimeout(timer);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error(\`SOUL_MESH_REQUEST_FAILED:\${target}\`);
+  return Promise.reject(lastError instanceof Error ? lastError : new Error(`SOUL_MESH_REQUEST_FAILED:${target}`));
 }
 export async function requestPeerCapability(target: N05Peer, capability: string, payload: unknown, timeoutMs?: number) {
   return sendTo(target, capability, payload, timeoutMs);
