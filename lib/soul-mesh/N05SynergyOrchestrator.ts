@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { describePeer, sendTo, type N05Peer } from './peer-client';
+import { sendTo, type N05Peer } from './peer-client';
 
 export type N05SynergyStep = { nucleus: N05Peer; capability: string; payload: unknown };
 export type N05SynergyResult = { correlationId: string; steps: Array<{ nucleus: N05Peer; capability: string; result: unknown }> };
@@ -25,7 +25,7 @@ export async function resolvePeerCapability(
   preferred: readonly string[],
   timeoutMs = 10_000,
 ): Promise<string> {
-  const response = await describePeer(nucleus, timeoutMs);
+  const response = await sendTo(nucleus, 'mesh.describe', {}, timeoutMs);
   const payload = (response.payload ?? {}) as PeerDescription;
   const executable = new Set(payload.executableCapabilities ?? []);
 
