@@ -67,7 +67,7 @@ function retryablePeerFailure(error: unknown): boolean {
   if (error instanceof TypeError) return true;
   if (error instanceof Error && error.name === 'AbortError') return true;
   return error instanceof Error
-    && /^SOUL_MESH_REMOTE_ERROR:[^:]+:(?:429|5\\d\\d)$/.test(error.message);
+    && /^SOUL_MESH_REMOTE_ERROR:[^:]+:(?:429|5\d\d)$/.test(error.message);
 }
 
 export async function sendTo(
@@ -78,7 +78,7 @@ export async function sendTo(
   retries = 1,
 ): Promise<SoulMeshMessage> {
   const url = urls[target];
-  if (!url) throw new Error(\`SOUL_MESH_PEER_URL_NOT_CONFIGURED:\${target}\`);
+  if (!url) throw new Error(`SOUL_MESH_PEER_URL_NOT_CONFIGURED:${target}`);
   const normalizedCapability = capability.trim();
   if (!normalizedCapability) throw new Error('SOUL_MESH_CAPABILITY_REQUIRED');
 
@@ -86,9 +86,9 @@ export async function sendTo(
   const token = process.env.SOUL_MESH_TOKEN?.trim() ?? '';
   const production = process.env.NODE_ENV === 'production';
   if (production && Buffer.byteLength(secret, 'utf8') < 32) {
-    throw new Error(\`SOUL_MESH_HMAC_NOT_CONFIGURED:\${target}\`);
+    throw new Error(`SOUL_MESH_HMAC_NOT_CONFIGURED:${target}`);
   }
-  if (production && !token) throw new Error(\`SOUL_MESH_BEARER_TOKEN_NOT_CONFIGURED:\${target}\`);
+  if (production && !token) throw new Error(`SOUL_MESH_BEARER_TOKEN_NOT_CONFIGURED:${target}`);
   if (secret && Buffer.byteLength(secret, 'utf8') < 32) throw new Error('SOUL_MESH_HMAC_SECRET_TOO_SHORT');
 
   const correlationId = randomUUID();
@@ -122,7 +122,7 @@ export async function sendTo(
         accept: 'application/json',
         'x-soul-correlation-id': correlationId,
       };
-      if (token) headers.authorization = \`Bearer \${token}\`;
+      if (token) headers.authorization = `Bearer ${token}`;
       if (secret) {
         headers['x-soul-mesh-nonce'] = nonceValue;
         headers['x-soul-mesh-hmac'] = target === 'N07'
@@ -130,7 +130,7 @@ export async function sendTo(
           : hmac(message, nonceValue, secret);
       }
 
-      const response = await fetch(\`\${url.replace(/\\/$/, '')}/api/soul-mesh\`, {
+      const response = await fetch(`${url.replace(/\/$/, '')}/api/soul-mesh`, {
         method: 'POST',
         headers,
         body: JSON.stringify(message),
@@ -141,7 +141,7 @@ export async function sendTo(
       if (!rawBody || typeof rawBody !== 'object') throw new Error('SOUL_MESH_INVALID_RESPONSE_BODY');
       const body = rawBody as SoulMeshMessage & { nonce?: string; hmac?: string };
       assertResponse(message, body, target);
-      if (production && !secret) throw new Error(\`SOUL_MESH_RESPONSE_HMAC_NOT_CONFIGURED:\${target}\`);
+      if (production && !secret) throw new Error(`SOUL_MESH_RESPONSE_HMAC_NOT_CONFIGURED:${target}`);
       if (secret) {
         const responseNonce = String(body.nonce ?? body.meta?.nonce ?? '').trim();
         const responseHmac = String(body.hmac ?? '').trim();
@@ -151,7 +151,7 @@ export async function sendTo(
         if (!validResponse) throw new Error('SOUL_MESH_RESPONSE_HMAC_INVALID');
       }
       if (!response.ok || body.kind === 'error') {
-        throw new Error(\`SOUL_MESH_REMOTE_ERROR:\${target}:\${response.status}\`);
+        throw new Error(`SOUL_MESH_REMOTE_ERROR:${target}:${response.status}`);
       }
       return body;
     } catch (error) {
